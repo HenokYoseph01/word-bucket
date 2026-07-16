@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/database/database.dart';
 import '../../data/database/word_dao.dart';
 import '../../providers/word_provider.dart';
+import '../widgets/definition_sheet.dart';
 import '../widgets/word_card.dart';
 
 class BucketScreen extends ConsumerStatefulWidget {
@@ -22,25 +23,27 @@ class _BucketScreenState extends ConsumerState<BucketScreen> {
     super.dispose();
   }
 
-  void _lookUpWord() {
+  Future<void> _lookUpWord() async {
     FocusScope.of(context).unfocus();
     ref.read(wordNotifierProvider.notifier).lookUp(_controller.text);
-  }
 
-  Future<void> _saveLookupResult() async {
-    final savedWord = await ref
-        .read(wordNotifierProvider.notifier)
-        .saveCurrentWord();
+    final savedWord = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => const DefinitionSheet(),
+    );
+
+    ref.read(wordNotifierProvider.notifier).clear();
     if (!mounted || savedWord == null) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('“${savedWord.word}” saved to your bucket.')),
+      SnackBar(content: Text('“$savedWord” saved to your bucket.')),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final lookup = ref.watch(wordNotifierProvider);
     final wordsAsync = ref.watch(savedWordsProvider);
     final words = wordsAsync.valueOrNull ?? const <SavedWord>[];
 
@@ -66,25 +69,8 @@ class _BucketScreenState extends ConsumerState<BucketScreen> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              _buildSearchField(lookup.isLoading),
+              _buildSearchField(),
               const SizedBox(height: 16),
-              if (lookup.isLoading) const LinearProgressIndicator(),
-              if (lookup.error != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Text(
-                    lookup.error!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              if (lookup.result != null) ...[
-                const SizedBox(height: 12),
-                WordCard(word: lookup.result!, onSave: _saveLookupResult),
-              ],
-              const SizedBox(height: 12),
               Expanded(child: _buildSavedWords(wordsAsync)),
             ],
           ),
@@ -93,7 +79,7 @@ class _BucketScreenState extends ConsumerState<BucketScreen> {
     );
   }
 
-  Widget _buildSearchField(bool isLoading) {
+  Widget _buildSearchField() {
     return TextField(
       controller: _controller,
       textInputAction: TextInputAction.search,
@@ -104,12 +90,12 @@ class _BucketScreenState extends ConsumerState<BucketScreen> {
         prefixIcon: const Icon(Icons.search),
         suffixIcon: IconButton(
           tooltip: 'Search',
-          onPressed: isLoading ? null : _lookUpWord,
+          onPressed: _lookUpWord,
           icon: const Icon(Icons.arrow_forward),
         ),
         border: const OutlineInputBorder(),
       ),
-      onSubmitted: isLoading ? null : (_) => _lookUpWord(),
+      onSubmitted: (_) => _lookUpWord(),
     );
   }
 

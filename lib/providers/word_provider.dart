@@ -53,6 +53,10 @@ class WordNotifier extends StateNotifier<LookupState> {
     state = const LookupState();
     return result;
   }
+
+  void clear() {
+    state = const LookupState();
+  }
 }
 
 final wordNotifierProvider = StateNotifierProvider<WordNotifier, LookupState>((
