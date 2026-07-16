@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,13 +12,19 @@ class DefinitionSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lookup = ref.watch(wordNotifierProvider);
+    final mediaQuery = MediaQuery.of(context);
+    final safeBottom = math.max(
+      mediaQuery.viewInsets.bottom,
+      mediaQuery.viewPadding.bottom,
+    );
 
     return Padding(
       padding: EdgeInsets.only(
         left: 24,
         top: 12,
         right: 24,
-        bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
+        // Keep actions above either the keyboard or Android's navigation area.
+        bottom: safeBottom + 24,
       ),
       child: SingleChildScrollView(
         child: Column(
