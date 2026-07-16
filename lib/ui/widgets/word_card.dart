@@ -4,9 +4,10 @@ import '../../data/models/word_model.dart';
 import 'part_of_speech_badge.dart';
 
 class WordCard extends StatelessWidget {
-  const WordCard({required this.word, super.key});
+  const WordCard({required this.word, this.onSave, super.key});
 
   final WordModel word;
+  final VoidCallback? onSave;
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +48,17 @@ class WordCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+            if (onSave != null) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: onSave,
+                  icon: const Icon(Icons.bookmark_add_outlined),
+                  label: const Text('Save to Bucket'),
                 ),
               ),
             ],
