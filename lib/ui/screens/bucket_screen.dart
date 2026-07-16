@@ -1,7 +1,21 @@
 import 'package:flutter/material.dart';
 
+import '../../data/models/word_model.dart';
+import '../widgets/word_card.dart';
+
 class BucketScreen extends StatelessWidget {
   const BucketScreen({super.key});
+
+  static final List<WordModel> _sampleWords = [
+    WordModel(
+      word: 'ephemeral',
+      phonetic: '/\u026a\u02c8f\u025bm(\u0259)r\u0259l/',
+      partOfSpeech: 'adjective',
+      definition: 'Lasting for a very short time.',
+      exampleSentence: 'The beauty of the sunset was ephemeral.',
+      savedAt: DateTime(2026, 7, 16),
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -14,41 +28,16 @@ class BucketScreen extends StatelessWidget {
         actions: const [
           Padding(
             padding: EdgeInsets.only(right: 16),
-            child: Chip(label: Text('0 words')),
+            child: Chip(label: Text('1 word')),
           ),
         ],
       ),
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.menu_book_outlined,
-                  size: 72,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Your bucket is empty',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Highlight a word in any Android app to look it up and save it here.',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
+        child: ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: _sampleWords.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 12),
+          itemBuilder: (context, index) => WordCard(word: _sampleWords[index]),
         ),
       ),
     );
