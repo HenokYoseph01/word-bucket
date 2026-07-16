@@ -11,7 +11,9 @@ import 'ui/widgets/definition_sheet.dart';
 final navigatorKey = GlobalKey<NavigatorState>();
 
 class WordBucketApp extends ConsumerStatefulWidget {
-  const WordBucketApp({super.key});
+  const WordBucketApp({this.bucketifyMode = false, super.key});
+
+  final bool bucketifyMode;
 
   @override
   ConsumerState<WordBucketApp> createState() => _WordBucketAppState();
@@ -25,13 +27,17 @@ class _WordBucketAppState extends ConsumerState<WordBucketApp> {
   @override
   void initState() {
     super.initState();
-    _intentChannel.setMethodCallHandler(_handleMethodCall);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _readInitialWord());
+    if (widget.bucketifyMode) {
+      _intentChannel.setMethodCallHandler(_handleMethodCall);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _readInitialWord());
+    }
   }
 
   @override
   void dispose() {
-    _intentChannel.setMethodCallHandler(null);
+    if (widget.bucketifyMode) {
+      _intentChannel.setMethodCallHandler(null);
+    }
     super.dispose();
   }
 
@@ -76,11 +82,23 @@ class _WordBucketAppState extends ConsumerState<WordBucketApp> {
 
     if (!mounted) return;
     ref.read(wordNotifierProvider.notifier).clear();
+    if (widget.bucketifyMode) {
+      await _finishBucketify();
+      return;
+    }
     if (!context.mounted || savedWord == null) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('“$savedWord” saved to your bucket.')),
     );
+  }
+
+  Future<void> _finishBucketify() async {
+    try {
+      await _intentChannel.invokeMethod<void>(finishBucketifyMethod);
+    } on PlatformException {
+      // Android will also close the activity through its normal back behavior.
+    }
   }
 
   @override
@@ -90,7 +108,10 @@ class _WordBucketAppState extends ConsumerState<WordBucketApp> {
       title: 'WordBucket',
       debugShowCheckedModeBanner: false,
       theme: buildWordBucketTheme(),
-      home: const BucketScreen(),
+      color: Colors.transparent,
+      home: widget.bucketifyMode
+          ? const ColoredBox(color: Colors.transparent)
+          : const BucketScreen(),
     );
   }
 }
