@@ -21,7 +21,13 @@ class Words extends Table {
 @DriftDatabase(tables: [Words])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
-    : super(executor ?? driftDatabase(name: 'wordbucket'));
+    : super(
+        executor ??
+            driftDatabase(
+              name: 'wordbucket',
+              native: const DriftNativeOptions(shareAcrossIsolates: true),
+            ),
+      );
 
   @override
   int get schemaVersion => 1;
