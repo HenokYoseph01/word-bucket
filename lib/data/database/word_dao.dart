@@ -39,9 +39,28 @@ extension WordDao on AppDatabase {
                 word.nextReviewAt.isNull() |
                 word.nextReviewAt.isSmallerOrEqualValue(reviewTime),
           )
-          ..orderBy([(word) => OrderingTerm.asc(word.nextReviewAt)])
+          ..orderBy([
+            (word) => OrderingTerm.asc(word.nextReviewAt),
+            (word) => OrderingTerm.asc(word.savedAt),
+          ])
           ..limit(1))
         .getSingleOrNull();
+  }
+
+  Future<void> advanceReviewSchedule(SavedWord word) {
+    const reviewIntervals = [1, 3, 7, 14, 30];
+    final completedReviews = word.reviewCount + 1;
+    final intervalIndex = completedReviews.clamp(0, reviewIntervals.length - 1);
+    final nextReview = DateTime.now().add(
+      Duration(days: reviewIntervals[intervalIndex]),
+    );
+
+    return (update(words)..where((row) => row.word.equals(word.word))).write(
+      WordsCompanion(
+        reviewCount: Value(completedReviews),
+        nextReviewAt: Value(nextReview),
+      ),
+    );
   }
 }
 

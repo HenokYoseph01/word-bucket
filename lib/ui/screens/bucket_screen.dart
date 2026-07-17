@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../background/review_worker.dart';
 import '../../data/database/database.dart';
 import '../../data/database/word_dao.dart';
 import '../../providers/word_provider.dart';
@@ -17,11 +18,14 @@ class BucketScreen extends ConsumerStatefulWidget {
 class _BucketScreenState extends ConsumerState<BucketScreen>
     with WidgetsBindingObserver {
   final _controller = TextEditingController();
+  bool _remindersEnabled = false;
+  bool _isUpdatingReminders = true;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _loadReminderSetting();
   }
 
   @override
@@ -41,6 +45,15 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
   Future<void> _refreshWords() async {
     ref.invalidate(savedWordsProvider);
     await ref.read(savedWordsProvider.future);
+  }
+
+  Future<void> _loadReminderSetting() async {
+    final enabled = await areReviewRemindersEnabled();
+    if (!mounted) return;
+    setState(() {
+      _remindersEnabled = enabled;
+      _isUpdatingReminders = false;
+    });
   }
 
   Future<void> _lookUpWord() async {
@@ -74,13 +87,7 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
-          IconButton(
-            tooltip: 'Test review notification',
-            onPressed: words.isEmpty
-                ? null
-                : () => _showTestNotification(words.first),
-            icon: const Icon(Icons.notifications_outlined),
-          ),
+          _buildReminderToggle(),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Chip(
@@ -106,33 +113,106 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     );
   }
 
-  Future<void> _showTestNotification(SavedWord word) async {
-    final notifications = ref.read(notificationServiceProvider);
-    try {
-      final granted = await notifications.requestPermission();
-      if (!mounted) return;
+  Widget _buildReminderToggle() {
+    final colors = Theme.of(context).colorScheme;
 
-      if (!granted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Notifications are disabled. Enable them in Android settings to receive reviews.',
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: _remindersEnabled
+              ? colors.primaryContainer
+              : colors.surfaceContainerHighest,
+        ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            IconButton(
+              tooltip: _remindersEnabled
+                  ? 'Turn review reminders off'
+                  : 'Turn review reminders on',
+              onPressed: _isUpdatingReminders ? null : _toggleReminders,
+              icon: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                transitionBuilder: (child, animation) => ScaleTransition(
+                  scale: animation,
+                  child: RotationTransition(turns: animation, child: child),
+                ),
+                child: Icon(
+                  _remindersEnabled
+                      ? Icons.notifications_active_rounded
+                      : Icons.notifications_off_outlined,
+                  key: ValueKey(_remindersEnabled),
+                  color: _remindersEnabled
+                      ? colors.primary
+                      : colors.onSurfaceVariant,
+                ),
+              ),
             ),
-          ),
-        );
-        return;
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 250),
+              right: _remindersEnabled ? 1 : 5,
+              top: _remindersEnabled ? 1 : 5,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                width: _remindersEnabled ? 9 : 0,
+                height: _remindersEnabled ? 9 : 0,
+                decoration: BoxDecoration(
+                  color: Colors.green.shade600,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: colors.surface, width: 1.5),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _toggleReminders() async {
+    final enable = !_remindersEnabled;
+    setState(() => _isUpdatingReminders = true);
+
+    try {
+      if (enable) {
+        final notifications = ref.read(notificationServiceProvider);
+        final granted = await notifications.requestPermission();
+        if (!mounted) return;
+        if (!granted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Notifications are disabled. Enable them in Android settings to receive reviews.',
+              ),
+            ),
+          );
+          return;
+        }
       }
 
-      await notifications.showReview(word);
+      await setReviewRemindersEnabled(enable);
       if (!mounted) return;
+      setState(() => _remindersEnabled = enable);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Review notification sent.')),
+        SnackBar(
+          content: Text(
+            enable
+                ? 'Daily review reminders are on.'
+                : 'Daily review reminders are off.',
+          ),
+        ),
       );
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not send notification: $error')),
+        SnackBar(content: Text('Could not update reminders: $error')),
       );
+    } finally {
+      if (mounted) setState(() => _isUpdatingReminders = false);
     }
   }
 

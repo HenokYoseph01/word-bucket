@@ -24,5 +24,12 @@ void main() {
     expect(words.single.word, 'ephemeral');
     expect(words.single.reviewCount, 0);
     expect(words.single.nextReviewAt, isNotNull);
+
+    final originalReviewDate = words.single.nextReviewAt!;
+    await database.advanceReviewSchedule(words.single);
+    final reviewedWord = (await database.watchAllWords().first).single;
+
+    expect(reviewedWord.reviewCount, 1);
+    expect(reviewedWord.nextReviewAt!.isAfter(originalReviewDate), isTrue);
   });
 }
