@@ -117,7 +117,7 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     final colors = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.only(top: 6, right: 8, bottom: 6),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOut,
