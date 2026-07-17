@@ -12,7 +12,7 @@ class NotificationService {
     if (_isInitialized) return;
 
     const settings = InitializationSettings(
-      android: AndroidInitializationSettings('ic_launcher'),
+      android: AndroidInitializationSettings('ic_notification'),
     );
     await _notifications.initialize(settings: settings);
 
@@ -52,6 +52,7 @@ class NotificationService {
       'word_reviews',
       'Word reviews',
       channelDescription: 'Reminders to review words saved in your bucket',
+      icon: 'ic_notification',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
       styleInformation: BigTextStyleInformation(body),

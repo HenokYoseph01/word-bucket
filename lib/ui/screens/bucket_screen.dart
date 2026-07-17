@@ -108,25 +108,32 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
 
   Future<void> _showTestNotification(SavedWord word) async {
     final notifications = ref.read(notificationServiceProvider);
-    final granted = await notifications.requestPermission();
-    if (!mounted) return;
+    try {
+      final granted = await notifications.requestPermission();
+      if (!mounted) return;
 
-    if (!granted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Notifications are disabled. Enable them in Android settings to receive reviews.',
+      if (!granted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Notifications are disabled. Enable them in Android settings to receive reviews.',
+            ),
           ),
-        ),
-      );
-      return;
-    }
+        );
+        return;
+      }
 
-    await notifications.showReview(word);
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Review notification sent.')));
+      await notifications.showReview(word);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Review notification sent.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not send notification: $error')),
+      );
+    }
   }
 
   Widget _buildSearchField() {
