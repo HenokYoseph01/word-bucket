@@ -22,5 +22,7 @@ void main() {
 
     expect(words, hasLength(1));
     expect(words.single.word, 'ephemeral');
+    expect(words.single.reviewCount, 0);
+    expect(words.single.nextReviewAt, isNotNull);
   });
 }

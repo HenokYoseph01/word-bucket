@@ -74,6 +74,13 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
+          IconButton(
+            tooltip: 'Test review notification',
+            onPressed: words.isEmpty
+                ? null
+                : () => _showTestNotification(words.first),
+            icon: const Icon(Icons.notifications_outlined),
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Chip(
@@ -97,6 +104,29 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _showTestNotification(SavedWord word) async {
+    final notifications = ref.read(notificationServiceProvider);
+    final granted = await notifications.requestPermission();
+    if (!mounted) return;
+
+    if (!granted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Notifications are disabled. Enable them in Android settings to receive reviews.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    await notifications.showReview(word);
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Review notification sent.')));
   }
 
   Widget _buildSearchField() {

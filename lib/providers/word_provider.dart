@@ -4,6 +4,7 @@ import '../data/database/database.dart';
 import '../data/database/word_dao.dart';
 import '../data/models/word_model.dart';
 import '../data/services/dictionary_service.dart';
+import '../data/services/notification_service.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   final database = AppDatabase();
@@ -15,6 +16,10 @@ final databaseProvider = Provider<AppDatabase>((ref) {
 
 final dictionaryServiceProvider = Provider<DictionaryService>((ref) {
   return DictionaryService();
+});
+
+final notificationServiceProvider = Provider<NotificationService>((ref) {
+  return NotificationService();
 });
 
 final savedWordsProvider = StreamProvider<List<SavedWord>>((ref) {

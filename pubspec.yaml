@@ -38,6 +38,7 @@ dependencies:
   drift: ^2.34.2
   drift_flutter: ^0.3.1
   flutter_riverpod: ^2.6.1
+  flutter_local_notifications: ^22.0.1
 
 dev_dependencies:
   flutter_test:

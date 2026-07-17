@@ -14,7 +14,9 @@ extension WordDao on AppDatabase {
         exampleSentence: Value(model.exampleSentence),
         savedAt: model.savedAt,
         reviewCount: Value(model.reviewCount),
-        nextReviewAt: Value(model.nextReviewAt),
+        nextReviewAt: Value(
+          model.nextReviewAt ?? DateTime.now().add(const Duration(days: 1)),
+        ),
       ),
     );
   }
@@ -27,6 +29,19 @@ extension WordDao on AppDatabase {
 
   Future<void> deleteWord(String text) {
     return (delete(words)..where((word) => word.word.equals(text))).go();
+  }
+
+  Future<SavedWord?> getWordDueForReview({DateTime? at}) {
+    final reviewTime = at ?? DateTime.now();
+    return (select(words)
+          ..where(
+            (word) =>
+                word.nextReviewAt.isNull() |
+                word.nextReviewAt.isSmallerOrEqualValue(reviewTime),
+          )
+          ..orderBy([(word) => OrderingTerm.asc(word.nextReviewAt)])
+          ..limit(1))
+        .getSingleOrNull();
   }
 }
 
