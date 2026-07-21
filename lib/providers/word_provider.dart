@@ -4,6 +4,7 @@ import '../data/database/database.dart';
 import '../data/database/word_dao.dart';
 import '../data/models/word_model.dart';
 import '../data/services/dictionary_service.dart';
+import '../data/services/home_widget_service.dart';
 import '../data/services/notification_service.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
@@ -22,6 +23,10 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
   return NotificationService();
 });
 
+final homeWidgetServiceProvider = Provider<HomeWidgetService>((ref) {
+  return HomeWidgetService();
+});
+
 final savedWordsProvider = StreamProvider<List<SavedWord>>((ref) {
   return ref.watch(databaseProvider).watchAllWords();
 });
@@ -35,10 +40,12 @@ class LookupState {
 }
 
 class WordNotifier extends StateNotifier<LookupState> {
-  WordNotifier(this._dictionary, this._database) : super(const LookupState());
+  WordNotifier(this._dictionary, this._database, this._homeWidget)
+    : super(const LookupState());
 
   final DictionaryService _dictionary;
   final AppDatabase _database;
+  final HomeWidgetService _homeWidget;
 
   Future<void> lookUp(String text) async {
     state = const LookupState(isLoading: true);
@@ -55,6 +62,7 @@ class WordNotifier extends StateNotifier<LookupState> {
     if (result == null) return null;
 
     await _database.saveWord(result);
+    await _homeWidget.showWord(result);
     state = const LookupState();
     return result;
   }
@@ -70,5 +78,6 @@ final wordNotifierProvider = StateNotifierProvider<WordNotifier, LookupState>((
   return WordNotifier(
     ref.watch(dictionaryServiceProvider),
     ref.watch(databaseProvider),
+    ref.watch(homeWidgetServiceProvider),
   );
 });
