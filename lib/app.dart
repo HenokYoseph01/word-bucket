@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/constants.dart';
 import 'core/theme.dart';
+import 'data/database/word_dao.dart';
 import 'providers/word_provider.dart';
 import 'ui/screens/bucket_screen.dart';
+import 'ui/screens/review_screen.dart';
 import 'ui/widgets/definition_sheet.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
@@ -23,6 +25,7 @@ class _WordBucketAppState extends ConsumerState<WordBucketApp> {
   static const _intentChannel = MethodChannel(intentChannelName);
 
   bool _isDefinitionSheetOpen = false;
+  bool _isReviewScreenOpen = false;
 
   @override
   void initState() {
@@ -30,7 +33,52 @@ class _WordBucketAppState extends ConsumerState<WordBucketApp> {
     if (widget.bucketifyMode) {
       _intentChannel.setMethodCallHandler(_handleMethodCall);
       WidgetsBinding.instance.addPostFrameCallback((_) => _readInitialWord());
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _initializeNotificationInteraction(),
+      );
     }
+  }
+
+  Future<void> _initializeNotificationInteraction() async {
+    final notifications = ref.read(notificationServiceProvider);
+    await notifications.initialize(onNotificationTap: _openReview);
+    final launchWord = await notifications.getLaunchWord();
+    if (launchWord != null && launchWord.isNotEmpty) {
+      await _openReview(launchWord);
+    }
+  }
+
+  Future<void> _openReview(String wordText) async {
+    if (_isReviewScreenOpen || !mounted) return;
+
+    final context = navigatorKey.currentContext;
+    if (context == null) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _openReview(wordText),
+      );
+      return;
+    }
+
+    final word = await ref.read(databaseProvider).getWord(wordText);
+    if (!mounted || !context.mounted) return;
+    if (word == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('“$wordText” is no longer in your bucket.')),
+      );
+      return;
+    }
+
+    _isReviewScreenOpen = true;
+    final message = await Navigator.of(
+      context,
+    ).push<String>(MaterialPageRoute(builder: (_) => ReviewScreen(word: word)));
+    _isReviewScreenOpen = false;
+
+    if (!context.mounted || message == null) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override

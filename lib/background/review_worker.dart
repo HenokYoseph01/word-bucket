@@ -19,14 +19,15 @@ void reviewCallbackDispatcher() {
 
     final database = AppDatabase();
     try {
-      final word = await database.getWordDueForReview();
+      final isTest = inputData?['isTest'] == true;
+      final word = isTest
+          ? await database.getMostRecentWord()
+          : await database.getWordDueForReview();
 
       if (word == null) return true;
 
       final notifications = NotificationService();
       await notifications.showReview(word);
-
-      await database.advanceReviewSchedule(word);
       return true;
     } catch (_) {
       // Returning false asks Android to retry according to WorkManager policy.
@@ -67,5 +68,15 @@ Future<void> _registerDailyReviewWork() {
     frequency: const Duration(hours: 24),
     existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
     constraints: Constraints(networkType: NetworkType.notRequired),
+  );
+}
+
+Future<void> scheduleReviewTestNotification() {
+  return Workmanager().registerOneOffTask(
+    reviewTestTaskUniqueName,
+    reviewTaskName,
+    initialDelay: const Duration(seconds: 10),
+    inputData: const {'isTest': true},
+    existingWorkPolicy: ExistingWorkPolicy.replace,
   );
 }

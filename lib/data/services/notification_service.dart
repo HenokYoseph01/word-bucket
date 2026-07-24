@@ -7,14 +7,24 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   bool _isInitialized = false;
+  void Function(String word)? _onNotificationTap;
 
-  Future<void> initialize() async {
+  Future<void> initialize({
+    void Function(String word)? onNotificationTap,
+  }) async {
+    if (onNotificationTap != null) _onNotificationTap = onNotificationTap;
     if (_isInitialized) return;
 
     const settings = InitializationSettings(
       android: AndroidInitializationSettings('ic_notification'),
     );
-    await _notifications.initialize(settings: settings);
+    await _notifications.initialize(
+      settings: settings,
+      onDidReceiveNotificationResponse: (response) {
+        final word = response.payload;
+        if (word != null && word.isNotEmpty) _onNotificationTap?.call(word);
+      },
+    );
 
     const channel = AndroidNotificationChannel(
       'word_reviews',
@@ -29,6 +39,13 @@ class NotificationService {
         ?.createNotificationChannel(channel);
 
     _isInitialized = true;
+  }
+
+  Future<String?> getLaunchWord() async {
+    await initialize();
+    final details = await _notifications.getNotificationAppLaunchDetails();
+    if (details?.didNotificationLaunchApp != true) return null;
+    return details?.notificationResponse?.payload;
   }
 
   Future<bool> requestPermission() async {
@@ -59,7 +76,7 @@ class NotificationService {
     );
     await _notifications.show(
       id: word.word.hashCode,
-      title: 'Review: ${word.word}',
+      title: 'Tap to review: ${word.word}',
       body: body,
       notificationDetails: NotificationDetails(android: androidDetails),
       payload: word.word,

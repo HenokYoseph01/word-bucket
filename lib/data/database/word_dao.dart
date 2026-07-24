@@ -37,6 +37,12 @@ extension WordDao on AppDatabase {
     return (delete(words)..where((word) => word.word.equals(text))).go();
   }
 
+  Future<SavedWord?> getWord(String text) {
+    return (select(
+      words,
+    )..where((word) => word.word.equals(text))).getSingleOrNull();
+  }
+
   Future<SavedWord?> getRandomWord({String? excluding}) {
     final query = select(words);
     if (excluding != null) {
@@ -64,6 +70,13 @@ extension WordDao on AppDatabase {
         .getSingleOrNull();
   }
 
+  Future<SavedWord?> getMostRecentWord() {
+    return (select(words)
+          ..orderBy([(word) => OrderingTerm.desc(word.savedAt)])
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
   Future<void> advanceReviewSchedule(SavedWord word) {
     const reviewIntervals = [1, 3, 7, 14, 30];
     final completedReviews = word.reviewCount + 1;
@@ -76,6 +89,15 @@ extension WordDao on AppDatabase {
       WordsCompanion(
         reviewCount: Value(completedReviews),
         nextReviewAt: Value(nextReview),
+      ),
+    );
+  }
+
+  Future<void> resetReviewSchedule(SavedWord word) {
+    return (update(words)..where((row) => row.word.equals(word.word))).write(
+      WordsCompanion(
+        reviewCount: const Value(0),
+        nextReviewAt: Value(DateTime.now().add(const Duration(days: 1))),
       ),
     );
   }

@@ -31,5 +31,14 @@ void main() {
 
     expect(reviewedWord.reviewCount, 1);
     expect(reviewedWord.nextReviewAt!.isAfter(originalReviewDate), isTrue);
+
+    await database.resetReviewSchedule(reviewedWord);
+    final forgottenWord = (await database.watchAllWords().first).single;
+
+    expect(forgottenWord.reviewCount, 0);
+    expect(
+      forgottenWord.nextReviewAt!.isBefore(reviewedWord.nextReviewAt!),
+      isTrue,
+    );
   });
 }

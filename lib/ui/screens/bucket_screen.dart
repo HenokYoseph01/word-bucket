@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../background/review_worker.dart';
@@ -88,6 +89,12 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
+          if (kDebugMode)
+            IconButton(
+              tooltip: 'Send review test in 10 seconds',
+              onPressed: words.isEmpty ? null : _scheduleReviewTest,
+              icon: const Icon(Icons.science_outlined),
+            ),
           _buildReminderToggle(),
           Padding(
             padding: const EdgeInsets.only(right: 16),
@@ -172,6 +179,39 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _scheduleReviewTest() async {
+    try {
+      final notifications = ref.read(notificationServiceProvider);
+      final granted = await notifications.requestPermission();
+      if (!mounted) return;
+      if (!granted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Notifications are disabled. Enable them in Android settings first.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      await scheduleReviewTestNotification();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Review test queued. It should arrive in about 10 seconds.',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not queue review test: $error')),
+      );
+    }
   }
 
   Future<void> _toggleReminders() async {
