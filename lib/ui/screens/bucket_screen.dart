@@ -26,6 +26,7 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _loadReminderSetting();
+    ref.read(wordNotifierProvider.notifier).syncHomeWidget();
   }
 
   @override
@@ -265,7 +266,9 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
                 key: ValueKey(savedWord.word),
                 direction: DismissDirection.endToStart,
                 onDismissed: (_) {
-                  ref.read(databaseProvider).deleteWord(savedWord.word);
+                  ref
+                      .read(wordNotifierProvider.notifier)
+                      .deleteWord(savedWord.word);
                 },
                 background: Container(
                   alignment: Alignment.centerRight,

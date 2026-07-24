@@ -67,6 +67,15 @@ class WordNotifier extends StateNotifier<LookupState> {
     return result;
   }
 
+  Future<void> deleteWord(String word) async {
+    await _database.deleteWord(word);
+    await syncHomeWidget();
+  }
+
+  Future<void> syncHomeWidget() {
+    return _homeWidget.syncFromDatabase(_database);
+  }
+
   void clear() {
     state = const LookupState();
   }

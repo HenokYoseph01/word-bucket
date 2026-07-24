@@ -31,6 +31,17 @@ extension WordDao on AppDatabase {
     return (delete(words)..where((word) => word.word.equals(text))).go();
   }
 
+  Future<SavedWord?> getRandomWord({String? excluding}) {
+    final query = select(words);
+    if (excluding != null) {
+      query.where((word) => word.word.isNotValue(excluding));
+    }
+    query
+      ..orderBy([(word) => OrderingTerm.random()])
+      ..limit(1);
+    return query.getSingleOrNull();
+  }
+
   Future<SavedWord?> getWordDueForReview({DateTime? at}) {
     final reviewTime = at ?? DateTime.now();
     return (select(words)
