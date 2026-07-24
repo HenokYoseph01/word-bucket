@@ -1,84 +1,56 @@
-import 'dart:ui';
+import 'dart:convert';
 
-import 'package:flutter/widgets.dart';
 import 'package:home_widget/home_widget.dart';
 
 import '../database/database.dart';
 import '../database/word_dao.dart';
-import '../models/word_model.dart';
 
 class HomeWidgetService {
   static const _providerName = 'WordWidgetProvider';
 
-  Future<void> showWord(WordModel word) {
-    return _show(
-      word: word.word,
-      partOfSpeech: word.partOfSpeech,
-      definition: word.definition,
-    );
-  }
-
-  Future<void> showSavedWord(SavedWord word) {
-    return _show(
-      word: word.word,
-      partOfSpeech: word.partOfSpeech,
-      definition: word.definition,
-    );
-  }
-
-  Future<void> syncFromDatabase(AppDatabase database) async {
-    final currentWord = await HomeWidget.getWidgetData<String>('word');
-    final word =
-        await database.getRandomWord(excluding: currentWord) ??
-        await database.getRandomWord();
-    if (word == null) {
-      await clear();
-    } else {
-      await showSavedWord(word);
-    }
-  }
-
-  Future<void> clear() async {
-    await Future.wait([
-      HomeWidget.saveWidgetData<String>('word', null),
-      HomeWidget.saveWidgetData<String>('partOfSpeech', null),
-      HomeWidget.saveWidgetData<String>('definition', null),
-    ]);
-    await _update();
-  }
-
-  Future<void> _show({
-    required String word,
-    required String partOfSpeech,
-    required String definition,
+  Future<void> syncFromDatabase(
+    AppDatabase database, {
+    String? preferredWord,
   }) async {
+    final words = await database.getAllWords();
+    final currentWord = await HomeWidget.getWidgetData<String>('word');
+    final selectedWord = preferredWord ?? currentWord;
+    var selectedIndex = words.indexWhere((word) => word.word == selectedWord);
+    if (selectedIndex < 0) selectedIndex = 0;
+
+    final items = words
+        .map(
+          (word) => {
+            'word': word.word,
+            'partOfSpeech': word.partOfSpeech,
+            'definition': word.definition,
+          },
+        )
+        .toList(growable: false);
+    final version = (await HomeWidget.getWidgetData<int>('dataVersion')) ?? 0;
+
     await Future.wait([
-      HomeWidget.saveWidgetData<String>('word', word),
-      HomeWidget.saveWidgetData<String>('partOfSpeech', partOfSpeech),
-      HomeWidget.saveWidgetData<String>('definition', definition),
+      HomeWidget.saveWidgetData<String>('itemsJson', jsonEncode(items)),
+      HomeWidget.saveWidgetData<int>('wordCount', words.length),
+      HomeWidget.saveWidgetData<int>('currentIndex', selectedIndex),
+      HomeWidget.saveWidgetData<int>('dataVersion', version + 1),
+      if (words.isEmpty) ...[
+        HomeWidget.saveWidgetData<String>('word', null),
+        HomeWidget.saveWidgetData<String>('partOfSpeech', null),
+        HomeWidget.saveWidgetData<String>('definition', null),
+      ] else ...[
+        HomeWidget.saveWidgetData<String>('word', words[selectedIndex].word),
+        HomeWidget.saveWidgetData<String>(
+          'partOfSpeech',
+          words[selectedIndex].partOfSpeech,
+        ),
+        HomeWidget.saveWidgetData<String>(
+          'definition',
+          words[selectedIndex].definition,
+        ),
+      ],
     ]);
-    await _update();
-  }
 
-  Future<void> _update() {
-    return HomeWidget.updateWidget(androidName: _providerName);
-  }
-}
-
-Future<void> initializeHomeWidget() async {
-  await HomeWidget.registerInteractivityCallback(homeWidgetCallback);
-}
-
-@pragma('vm:entry-point')
-Future<void> homeWidgetCallback(Uri? uri) async {
-  if (uri?.host != 'refresh') return;
-
-  WidgetsFlutterBinding.ensureInitialized();
-  DartPluginRegistrant.ensureInitialized();
-  final database = AppDatabase();
-  try {
-    await HomeWidgetService().syncFromDatabase(database);
-  } finally {
-    await database.close();
+    await HomeWidget.updateWidget(androidName: _providerName);
   }
 }

@@ -62,7 +62,7 @@ class WordNotifier extends StateNotifier<LookupState> {
     if (result == null) return null;
 
     await _database.saveWord(result);
-    await _homeWidget.showWord(result);
+    await _homeWidget.syncFromDatabase(_database, preferredWord: result.word);
     state = const LookupState();
     return result;
   }

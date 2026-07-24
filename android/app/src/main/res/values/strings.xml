@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="word_widget_name">WordBucket word</string>
-    <string name="word_widget_description">Shows a saved vocabulary word</string>
+    <string name="word_widget_description">Rotates through your saved vocabulary words</string>
     <string name="refresh_word">Show another word</string>
 </resources>

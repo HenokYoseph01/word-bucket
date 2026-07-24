@@ -27,6 +27,12 @@ extension WordDao on AppDatabase {
     )..orderBy([(word) => OrderingTerm.desc(word.savedAt)])).watch();
   }
 
+  Future<List<SavedWord>> getAllWords() {
+    return (select(
+      words,
+    )..orderBy([(word) => OrderingTerm.desc(word.savedAt)])).get();
+  }
+
   Future<void> deleteWord(String text) {
     return (delete(words)..where((word) => word.word.equals(text))).go();
   }
