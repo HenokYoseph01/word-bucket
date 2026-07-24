@@ -19,6 +19,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   int _rememberedCount = 0;
   int _againCount = 0;
   bool _isSaving = false;
+  bool _isAnswerRevealed = false;
 
   Future<void> _recordAnswer(bool remembered) async {
     setState(() => _isSaving = true);
@@ -38,6 +39,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         setState(() {
           _currentIndex++;
           _isSaving = false;
+          _isAnswerRevealed = false;
         });
       } else {
         Navigator.pop(
@@ -75,67 +77,12 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 context,
               ).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.bold),
             ),
-            if (word.phonetic != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                word.phonetic!,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-            const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: PartOfSpeechBadge(label: word.partOfSpeech),
-            ),
             const SizedBox(height: 24),
-            Text(
-              word.definition,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            if (word.exampleSentence != null) ...[
-              const SizedBox(height: 16),
-              Text(
-                '“${word.exampleSentence}”',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
-            const SizedBox(height: 32),
-            Text(
-              'Previous successful reviews: ${word.reviewCount}',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 32),
-            Text(
-              'Did you remember this word?',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _isSaving ? null : () => _recordAnswer(false),
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Again'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: _isSaving ? null : () => _recordAnswer(true),
-                    icon: const Icon(Icons.check),
-                    label: const Text('Remembered'),
-                  ),
-                ),
-              ],
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              child: _isAnswerRevealed
+                  ? _buildRevealedAnswer(context, word)
+                  : _buildRecallPrompt(context),
             ),
             if (_isSaving) ...[
               const SizedBox(height: 16),
@@ -144,6 +91,92 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildRecallPrompt(BuildContext context) {
+    return Column(
+      key: const ValueKey('recall-prompt'),
+      children: [
+        Text(
+          'Think of the meaning before revealing the answer.',
+          style: Theme.of(context).textTheme.titleMedium,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 24),
+        FilledButton.icon(
+          onPressed: () => setState(() => _isAnswerRevealed = true),
+          icon: const Icon(Icons.visibility_outlined),
+          label: const Text('Reveal definition'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRevealedAnswer(BuildContext context, SavedWord word) {
+    return Column(
+      key: const ValueKey('revealed-answer'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (word.phonetic != null) ...[
+          Text(
+            word.phonetic!,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        Align(
+          alignment: Alignment.centerLeft,
+          child: PartOfSpeechBadge(label: word.partOfSpeech),
+        ),
+        const SizedBox(height: 24),
+        Text(word.definition, style: Theme.of(context).textTheme.titleLarge),
+        if (word.exampleSentence != null) ...[
+          const SizedBox(height: 16),
+          Text(
+            '“${word.exampleSentence}”',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+        const SizedBox(height: 32),
+        Text(
+          'Previous successful reviews: ${word.reviewCount}',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+        const SizedBox(height: 32),
+        Text(
+          'Did you remember this word?',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _isSaving ? null : () => _recordAnswer(false),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Again'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: _isSaving ? null : () => _recordAnswer(true),
+                icon: const Icon(Icons.check),
+                label: const Text('Remembered'),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
