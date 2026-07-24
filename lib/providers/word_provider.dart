@@ -31,6 +31,10 @@ final savedWordsProvider = StreamProvider<List<SavedWord>>((ref) {
   return ref.watch(databaseProvider).watchAllWords();
 });
 
+final dueWordsProvider = FutureProvider<List<SavedWord>>((ref) {
+  return ref.watch(databaseProvider).getWordsDueForReview();
+});
+
 class LookupState {
   const LookupState({this.isLoading = false, this.result, this.error});
 

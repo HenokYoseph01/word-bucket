@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../background/review_worker.dart';
 import '../../data/database/database.dart';
 import '../../data/database/word_dao.dart';
 import '../../providers/word_provider.dart';
+import 'review_screen.dart';
 import '../widgets/definition_sheet.dart';
 import '../widgets/word_card.dart';
 
@@ -41,12 +41,17 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       ref.invalidate(savedWordsProvider);
+      ref.invalidate(dueWordsProvider);
     }
   }
 
   Future<void> _refreshWords() async {
     ref.invalidate(savedWordsProvider);
-    await ref.read(savedWordsProvider.future);
+    ref.invalidate(dueWordsProvider);
+    await Future.wait([
+      ref.read(savedWordsProvider.future),
+      ref.read(dueWordsProvider.future),
+    ]);
   }
 
   Future<void> _loadReminderSetting() async {
@@ -81,6 +86,7 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
   Widget build(BuildContext context) {
     final wordsAsync = ref.watch(savedWordsProvider);
     final words = wordsAsync.valueOrNull ?? const <SavedWord>[];
+    final dueWordsAsync = ref.watch(dueWordsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -89,12 +95,6 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
-          if (kDebugMode)
-            IconButton(
-              tooltip: 'Send review test in 10 seconds',
-              onPressed: words.isEmpty ? null : _scheduleReviewTest,
-              icon: const Icon(Icons.science_outlined),
-            ),
           _buildReminderToggle(),
           Padding(
             padding: const EdgeInsets.only(right: 16),
@@ -112,6 +112,11 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
           child: Column(
             children: [
               _buildSearchField(),
+              if (dueWordsAsync.valueOrNull case final dueWords?
+                  when dueWords.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _buildReviewBanner(dueWords),
+              ],
               const SizedBox(height: 16),
               Expanded(child: _buildSavedWords(wordsAsync)),
             ],
@@ -181,37 +186,30 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     );
   }
 
-  Future<void> _scheduleReviewTest() async {
-    try {
-      final notifications = ref.read(notificationServiceProvider);
-      final granted = await notifications.requestPermission();
-      if (!mounted) return;
-      if (!granted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Notifications are disabled. Enable them in Android settings first.',
-            ),
-          ),
-        );
-        return;
-      }
-
-      await scheduleReviewTestNotification();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Review test queued. It should arrive in about 10 seconds.',
-          ),
+  Widget _buildReviewBanner(List<SavedWord> dueWords) {
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.school_outlined),
+        title: Text(
+          '${dueWords.length} ${dueWords.length == 1 ? 'word is' : 'words are'} due',
         ),
-      );
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not queue review test: $error')),
-      );
-    }
+        subtitle: const Text('Practise your due words now'),
+        trailing: const Icon(Icons.arrow_forward),
+        onTap: () => _openReviewQueue(dueWords),
+      ),
+    );
+  }
+
+  Future<void> _openReviewQueue(List<SavedWord> words) async {
+    final message = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => ReviewScreen(words: words)),
+    );
+    ref.invalidate(dueWordsProvider);
+    ref.invalidate(savedWordsProvider);
+    if (!mounted || message == null) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _toggleReminders() async {

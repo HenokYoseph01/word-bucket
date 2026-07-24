@@ -6,15 +6,18 @@ import '../../providers/word_provider.dart';
 import '../widgets/part_of_speech_badge.dart';
 
 class ReviewScreen extends ConsumerStatefulWidget {
-  const ReviewScreen({required this.word, super.key});
+  const ReviewScreen({required this.words, super.key});
 
-  final SavedWord word;
+  final List<SavedWord> words;
 
   @override
   ConsumerState<ReviewScreen> createState() => _ReviewScreenState();
 }
 
 class _ReviewScreenState extends ConsumerState<ReviewScreen> {
+  int _currentIndex = 0;
+  int _rememberedCount = 0;
+  int _againCount = 0;
   bool _isSaving = false;
 
   Future<void> _recordAnswer(bool remembered) async {
@@ -22,29 +25,50 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     try {
       await ref
           .read(wordNotifierProvider.notifier)
-          .recordReview(widget.word, remembered: remembered);
+          .recordReview(widget.words[_currentIndex], remembered: remembered);
       if (!mounted) return;
-      Navigator.pop(
-        context,
-        remembered
-            ? 'Nice work — the next review was scheduled.'
-            : 'No problem — this word will return tomorrow.',
-      );
+
+      if (remembered) {
+        _rememberedCount++;
+      } else {
+        _againCount++;
+      }
+
+      if (_currentIndex < widget.words.length - 1) {
+        setState(() {
+          _currentIndex++;
+          _isSaving = false;
+        });
+      } else {
+        Navigator.pop(
+          context,
+          'Review complete: $_rememberedCount remembered, '
+          '$_againCount to practise again.',
+        );
+      }
     } finally {
-      if (mounted) setState(() => _isSaving = false);
+      if (mounted && _isSaving) setState(() => _isSaving = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final word = widget.word;
+    final word = widget.words[_currentIndex];
+    final currentNumber = _currentIndex + 1;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Review word')),
+      appBar: AppBar(title: const Text('Review words')),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(24),
           children: [
+            Text(
+              'Review $currentNumber of ${widget.words.length}',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: 8),
+            LinearProgressIndicator(value: currentNumber / widget.words.length),
+            const SizedBox(height: 28),
             Text(
               word.word,
               style: Theme.of(

@@ -19,10 +19,7 @@ void reviewCallbackDispatcher() {
 
     final database = AppDatabase();
     try {
-      final isTest = inputData?['isTest'] == true;
-      final word = isTest
-          ? await database.getMostRecentWord()
-          : await database.getWordDueForReview();
+      final word = await database.getWordDueForReview();
 
       if (word == null) return true;
 
@@ -68,15 +65,5 @@ Future<void> _registerDailyReviewWork() {
     frequency: const Duration(hours: 24),
     existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
     constraints: Constraints(networkType: NetworkType.notRequired),
-  );
-}
-
-Future<void> scheduleReviewTestNotification() {
-  return Workmanager().registerOneOffTask(
-    reviewTestTaskUniqueName,
-    reviewTaskName,
-    initialDelay: const Duration(seconds: 10),
-    inputData: const {'isTest': true},
-    existingWorkPolicy: ExistingWorkPolicy.replace,
   );
 }

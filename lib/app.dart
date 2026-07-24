@@ -60,7 +60,8 @@ class _WordBucketAppState extends ConsumerState<WordBucketApp> {
       return;
     }
 
-    final word = await ref.read(databaseProvider).getWord(wordText);
+    final database = ref.read(databaseProvider);
+    final word = await database.getWord(wordText);
     if (!mounted || !context.mounted) return;
     if (word == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -69,11 +70,20 @@ class _WordBucketAppState extends ConsumerState<WordBucketApp> {
       return;
     }
 
+    final dueWords = await database.getWordsDueForReview();
+    if (!mounted || !context.mounted) return;
+    final reviewWords = [
+      word,
+      ...dueWords.where((dueWord) => dueWord.word != word.word),
+    ];
+
     _isReviewScreenOpen = true;
-    final message = await Navigator.of(
-      context,
-    ).push<String>(MaterialPageRoute(builder: (_) => ReviewScreen(word: word)));
+    final message = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => ReviewScreen(words: reviewWords)),
+    );
     _isReviewScreenOpen = false;
+    ref.invalidate(dueWordsProvider);
+    ref.invalidate(savedWordsProvider);
 
     if (!context.mounted || message == null) return;
     ScaffoldMessenger.of(

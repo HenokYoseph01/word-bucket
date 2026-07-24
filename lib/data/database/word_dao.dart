@@ -55,26 +55,26 @@ extension WordDao on AppDatabase {
   }
 
   Future<SavedWord?> getWordDueForReview({DateTime? at}) {
-    final reviewTime = at ?? DateTime.now();
-    return (select(words)
-          ..where(
-            (word) =>
-                word.nextReviewAt.isNull() |
-                word.nextReviewAt.isSmallerOrEqualValue(reviewTime),
-          )
-          ..orderBy([
-            (word) => OrderingTerm.asc(word.nextReviewAt),
-            (word) => OrderingTerm.asc(word.savedAt),
-          ])
-          ..limit(1))
-        .getSingleOrNull();
+    return getWordsDueForReview(
+      at: at,
+      limit: 1,
+    ).then((words) => words.firstOrNull);
   }
 
-  Future<SavedWord?> getMostRecentWord() {
-    return (select(words)
-          ..orderBy([(word) => OrderingTerm.desc(word.savedAt)])
-          ..limit(1))
-        .getSingleOrNull();
+  Future<List<SavedWord>> getWordsDueForReview({DateTime? at, int? limit}) {
+    final reviewTime = at ?? DateTime.now();
+    final query = select(words)
+      ..where(
+        (word) =>
+            word.nextReviewAt.isNull() |
+            word.nextReviewAt.isSmallerOrEqualValue(reviewTime),
+      )
+      ..orderBy([
+        (word) => OrderingTerm.asc(word.nextReviewAt),
+        (word) => OrderingTerm.asc(word.savedAt),
+      ]);
+    if (limit != null) query.limit(limit);
+    return query.get();
   }
 
   Future<void> advanceReviewSchedule(SavedWord word) {
