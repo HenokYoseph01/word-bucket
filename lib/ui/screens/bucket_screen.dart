@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,6 +21,9 @@ class BucketScreen extends ConsumerStatefulWidget {
 class _BucketScreenState extends ConsumerState<BucketScreen>
     with WidgetsBindingObserver {
   final _controller = TextEditingController();
+  Timer? _suggestionDebounce;
+  List<String> _suggestions = const [];
+  int _suggestionRequest = 0;
   bool _remindersEnabled = false;
   bool _isUpdatingReminders = true;
 
@@ -33,6 +38,7 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _suggestionDebounce?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -64,6 +70,11 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
   }
 
   Future<void> _lookUpWord() async {
+    _suggestionDebounce?.cancel();
+    _suggestionRequest++;
+    if (_suggestions.isNotEmpty) {
+      setState(() => _suggestions = const []);
+    }
     FocusScope.of(context).unfocus();
     ref.read(wordNotifierProvider.notifier).lookUp(_controller.text);
 
@@ -77,6 +88,7 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     ref.read(wordNotifierProvider.notifier).clear();
     if (!mounted || savedWord == null) return;
 
+    _controller.clear();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('“$savedWord” saved to your bucket.')),
     );
@@ -112,6 +124,10 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
           child: Column(
             children: [
               _buildSearchField(),
+              if (_suggestions.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                _buildSuggestions(),
+              ],
               if (dueWordsAsync.valueOrNull case final dueWords?
                   when dueWords.isNotEmpty) ...[
                 const SizedBox(height: 12),
@@ -271,7 +287,61 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
         ),
         border: const OutlineInputBorder(),
       ),
+      onChanged: _onSearchChanged,
       onSubmitted: (_) => _lookUpWord(),
+    );
+  }
+
+  void _onSearchChanged(String value) {
+    _suggestionDebounce?.cancel();
+    final query = value.trim();
+    final request = ++_suggestionRequest;
+
+    if (query.length < 2) {
+      if (_suggestions.isNotEmpty) {
+        setState(() => _suggestions = const []);
+      }
+      return;
+    }
+
+    if (_suggestions.isNotEmpty) {
+      setState(() => _suggestions = const []);
+    }
+    _suggestionDebounce = Timer(const Duration(milliseconds: 350), () async {
+      final suggestions = await ref
+          .read(wordSuggestionServiceProvider)
+          .suggest(query);
+      if (!mounted ||
+          request != _suggestionRequest ||
+          _controller.text.trim() != query) {
+        return;
+      }
+      setState(() => _suggestions = suggestions);
+    });
+  }
+
+  Widget _buildSuggestions() {
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final suggestion in _suggestions)
+            ListTile(
+              dense: true,
+              leading: const Icon(Icons.search, size: 20),
+              title: Text(suggestion),
+              onTap: () {
+                _controller.text = suggestion;
+                _controller.selection = TextSelection.collapsed(
+                  offset: suggestion.length,
+                );
+                _lookUpWord();
+              },
+            ),
+        ],
+      ),
     );
   }
 

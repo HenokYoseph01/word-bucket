@@ -6,6 +6,7 @@ import '../data/models/word_model.dart';
 import '../data/services/dictionary_service.dart';
 import '../data/services/home_widget_service.dart';
 import '../data/services/notification_service.dart';
+import '../data/services/word_suggestion_service.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   final database = AppDatabase();
@@ -17,6 +18,10 @@ final databaseProvider = Provider<AppDatabase>((ref) {
 
 final dictionaryServiceProvider = Provider<DictionaryService>((ref) {
   return DictionaryService();
+});
+
+final wordSuggestionServiceProvider = Provider<WordSuggestionService>((ref) {
+  return WordSuggestionService();
 });
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
