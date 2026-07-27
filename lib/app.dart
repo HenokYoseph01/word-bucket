@@ -84,6 +84,7 @@ class _WordBucketAppState extends ConsumerState<WordBucketApp> {
     _isReviewScreenOpen = false;
     ref.invalidate(dueWordsProvider);
     ref.invalidate(savedWordsProvider);
+    ref.invalidate(reviewStatisticsProvider);
 
     if (!context.mounted || message == null) return;
     ScaffoldMessenger.of(

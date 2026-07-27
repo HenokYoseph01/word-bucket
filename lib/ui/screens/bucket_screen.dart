@@ -8,6 +8,7 @@ import '../../data/database/database.dart';
 import '../../data/database/word_dao.dart';
 import '../../providers/word_provider.dart';
 import 'review_screen.dart';
+import 'statistics_screen.dart';
 import '../widgets/definition_sheet.dart';
 import '../widgets/word_card.dart';
 
@@ -107,6 +108,11 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
+          IconButton(
+            tooltip: 'View progress',
+            onPressed: _openStatistics,
+            icon: const Icon(Icons.insights_outlined),
+          ),
           _buildReminderToggle(),
           Padding(
             padding: const EdgeInsets.only(right: 16),
@@ -202,6 +208,13 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     );
   }
 
+  Future<void> _openStatistics() async {
+    await Navigator.of(
+      context,
+    ).push<void>(MaterialPageRoute(builder: (_) => const StatisticsScreen()));
+    ref.invalidate(reviewStatisticsProvider);
+  }
+
   Widget _buildReviewBanner(List<SavedWord> dueWords) {
     return Card(
       child: ListTile(
@@ -222,6 +235,7 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     );
     ref.invalidate(dueWordsProvider);
     ref.invalidate(savedWordsProvider);
+    ref.invalidate(reviewStatisticsProvider);
     if (!mounted || message == null) return;
     ScaffoldMessenger.of(
       context,
