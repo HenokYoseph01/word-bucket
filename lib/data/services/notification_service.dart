@@ -39,7 +39,7 @@ class NotificationService {
         ?.createNotificationChannel(channel);
     const streakChannel = AndroidNotificationChannel(
       'streak_reminders',
-      'Gentle streak reminders',
+      'Streak reminders',
       description: 'Optional reminders to continue your review streak',
       importance: Importance.defaultImportance,
     );
@@ -103,7 +103,7 @@ class NotificationService {
         : 'A few words are ready when you are. Take a moment to review.';
     const androidDetails = AndroidNotificationDetails(
       'streak_reminders',
-      'Gentle streak reminders',
+      'Streak reminders',
       channelDescription: 'Optional reminders to continue your review streak',
       icon: 'ic_notification',
       importance: Importance.defaultImportance,

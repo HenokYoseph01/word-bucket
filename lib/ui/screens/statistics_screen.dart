@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../background/review_worker.dart';
-import '../../data/database/word_dao.dart';
 import '../../providers/word_provider.dart';
 
 class StatisticsScreen extends ConsumerStatefulWidget {
@@ -60,25 +59,15 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
                         secondary: const Icon(
                           Icons.notifications_active_outlined,
                         ),
-                        title: const Text('Gentle streak reminder'),
+                        title: const Text('Streak reminder'),
                         subtitle: const Text(
-                          'Around 7 PM, only when your streak is active, '
+                          'Around 1 PM, only when your streak is active, '
                           'you have not reviewed today, and words are due.',
                         ),
                         value: _streakRemindersEnabled,
                         onChanged: _isUpdatingReminder
                             ? null
                             : _setStreakReminder,
-                      ),
-                      const Divider(height: 1),
-                      ListTile(
-                        leading: const Icon(Icons.notification_add_outlined),
-                        title: const Text('Send example notification'),
-                        subtitle: const Text(
-                          'Sends immediately so you can preview it.',
-                        ),
-                        onTap: () =>
-                            _sendExampleNotification(data.currentStreak),
                       ),
                     ],
                   ),
@@ -199,9 +188,7 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            enabled
-                ? 'Gentle streak reminders are on.'
-                : 'Gentle streak reminders are off.',
+            enabled ? 'Streak reminders are on.' : 'Streak reminders are off.',
           ),
         ),
       );
@@ -213,40 +200,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     } finally {
       if (mounted) setState(() => _isUpdatingReminder = false);
     }
-  }
-
-  Future<void> _sendExampleNotification(int streak) async {
-    final notifications = ref.read(notificationServiceProvider);
-    final granted = await notifications.requestPermission();
-    if (!mounted) return;
-    if (!granted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Notifications are disabled in Android settings.'),
-        ),
-      );
-      return;
-    }
-
-    final database = ref.read(databaseProvider);
-    final dueWords = await database.getWordsDueForReview();
-    final words = dueWords.isNotEmpty ? dueWords : await database.getAllWords();
-    if (!mounted) return;
-    if (words.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Save a word before testing reminders.')),
-      );
-      return;
-    }
-
-    await notifications.showStreakReminder(
-      words.first,
-      streak: streak > 0 ? streak : 1,
-    );
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Example notification sent.')));
   }
 
   String _formatReviewDate(DateTime date) {

@@ -75,7 +75,7 @@ Future<void> setReviewRemindersEnabled(bool enabled) async {
 
 Future<bool> areStreakRemindersEnabled() async {
   return await SharedPreferencesAsync().getBool(streakRemindersEnabledKey) ??
-      false;
+      true;
 }
 
 Future<void> setStreakRemindersEnabled(bool enabled) async {
@@ -97,20 +97,22 @@ Future<void> _registerDailyReviewWork() {
   );
 }
 
-Future<void> _registerDailyStreakWork() {
-  return Workmanager().registerPeriodicTask(
+Future<void> _registerDailyStreakWork() async {
+  // Replace older registrations so reminder-time changes take effect.
+  await Workmanager().cancelByUniqueName(streakTaskUniqueName);
+  await Workmanager().registerPeriodicTask(
     streakTaskUniqueName,
     streakTaskName,
     frequency: const Duration(hours: 24),
-    initialDelay: _delayUntilNextEvening(),
-    existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
+    initialDelay: _delayUntilNextReminder(),
+    existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
     constraints: Constraints(networkType: NetworkType.notRequired),
   );
 }
 
-Duration _delayUntilNextEvening() {
+Duration _delayUntilNextReminder() {
   final now = DateTime.now();
-  var nextRun = DateTime(now.year, now.month, now.day, 19);
+  var nextRun = DateTime(now.year, now.month, now.day, 13);
   if (!nextRun.isAfter(now)) {
     nextRun = nextRun.add(const Duration(days: 1));
   }
