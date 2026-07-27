@@ -15,6 +15,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _daily = false;
   bool _streak = true;
   bool _loading = true;
+  bool _updating = false;
 
   @override
   void initState() {
@@ -35,66 +36,316 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     });
   }
 
-  Future<bool> _permission() {
-    return ref.read(notificationServiceProvider).requestPermission();
-  }
+  Future<void> _setReminder({
+    required bool value,
+    required bool isStreak,
+  }) async {
+    setState(() => _updating = true);
+    try {
+      if (value) {
+        final granted = await ref
+            .read(notificationServiceProvider)
+            .requestPermission();
+        if (!mounted) return;
+        if (!granted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Notifications are disabled. Enable them in Android settings first.',
+              ),
+            ),
+          );
+          return;
+        }
+      }
 
-  Future<void> _setDaily(bool value) async {
-    if (value && !await _permission()) return;
-    await setReviewRemindersEnabled(value);
-    if (mounted) setState(() => _daily = value);
-  }
-
-  Future<void> _setStreak(bool value) async {
-    if (value && !await _permission()) return;
-    await setStreakRemindersEnabled(value);
-    if (mounted) setState(() => _streak = value);
+      if (isStreak) {
+        await setStreakRemindersEnabled(value);
+      } else {
+        await setReviewRemindersEnabled(value);
+      }
+      if (!mounted) return;
+      setState(() {
+        if (isStreak) {
+          _streak = value;
+        } else {
+          _daily = value;
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${isStreak ? 'Streak' : 'Daily word'} reminder '
+            '${value ? 'enabled' : 'disabled'}.',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not update reminders: $error')),
+      );
+    } finally {
+      if (mounted) setState(() => _updating = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final disabled = _loading || _updating;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text('Reminders', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 10),
-          Card(
-            child: Column(
-              children: [
-                SwitchListTile(
-                  secondary: const Icon(Icons.notifications_outlined),
-                  title: const Text('Daily word reminder'),
-                  subtitle: const Text('A due word from your bucket'),
-                  value: _daily,
-                  onChanged: _loading ? null : _setDaily,
-                ),
-                const Divider(height: 1),
-                SwitchListTile(
-                  secondary: const Icon(Icons.local_fire_department_outlined),
-                  title: const Text('Streak reminder'),
-                  subtitle: const Text(
-                    'Around 1 PM when your active streak needs attention',
+      appBar: AppBar(title: const Text('Settings'), centerTitle: true),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+          children: [
+            _buildHeader(context),
+            const SizedBox(height: 26),
+            const _SectionLabel(
+              icon: Icons.notifications_none_rounded,
+              title: 'Reminders',
+              subtitle: 'Choose how WordBucket gently brings words back.',
+            ),
+            const SizedBox(height: 10),
+            Card(
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
+                  _ReminderTile(
+                    icon: Icons.menu_book_rounded,
+                    title: 'Daily word reminder',
+                    description:
+                        'Receive one due word to keep vocabulary fresh.',
+                    value: _daily,
+                    enabled: !disabled,
+                    onChanged: (value) =>
+                        _setReminder(value: value, isStreak: false),
                   ),
-                  value: _streak,
-                  onChanged: _loading ? null : _setStreak,
+                  const Divider(height: 1, indent: 76),
+                  _ReminderTile(
+                    icon: Icons.local_fire_department_rounded,
+                    title: 'Streak reminder',
+                    description:
+                        'Around 1 PM, only when an active streak needs attention.',
+                    value: _streak,
+                    enabled: !disabled,
+                    onChanged: (value) =>
+                        _setReminder(value: value, isStreak: true),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 28),
+            const _SectionLabel(
+              icon: Icons.info_outline_rounded,
+              title: 'About',
+              subtitle: 'Built for calmer, uninterrupted reading.',
+            ),
+            const SizedBox(height: 10),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(17),
+                      ),
+                      child: Icon(
+                        Icons.auto_stories_rounded,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'WordBucket',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          SizedBox(height: 3),
+                          Text(
+                            'Collect words while reading. Remember them over time.',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (_updating) ...[
+              const SizedBox(height: 16),
+              const LinearProgressIndicator(),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colors.primary,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.tune_rounded, color: colors.tertiaryContainer, size: 34),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Make it yours',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: colors.onPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Keep your reading rhythm comfortable.',
+                  style: TextStyle(
+                    color: colors.onPrimary.withValues(alpha: 0.72),
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          Text('About', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 10),
-          const Card(
-            child: ListTile(
-              leading: Icon(Icons.auto_stories_outlined),
-              title: Text('WordBucket'),
-              subtitle: Text('A calmer way to collect and remember words.'),
-            ),
-          ),
         ],
       ),
+    );
+  }
+}
+
+class _ReminderTile extends StatelessWidget {
+  const _ReminderTile({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.value,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final IconData icon;
+  final String title;
+  final String description;
+  final bool value;
+  final bool enabled;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: value
+                  ? colors.primaryContainer
+                  : colors.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Icon(icon, color: colors.primary),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        title,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    const SizedBox(width: 7),
+                    Text(
+                      value ? 'ON' : 'OFF',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: value ? colors.primary : colors.outline,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  description,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(value: value, onChanged: enabled ? onChanged : null),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 21, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
