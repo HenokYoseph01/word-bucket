@@ -6,6 +6,7 @@ import 'core/constants.dart';
 import 'core/theme.dart';
 import 'data/database/word_dao.dart';
 import 'providers/word_provider.dart';
+import 'providers/theme_provider.dart';
 import 'ui/screens/bucket_screen.dart';
 import 'ui/screens/review_screen.dart';
 import 'ui/widgets/definition_sheet.dart';
@@ -162,11 +163,14 @@ class _WordBucketAppState extends ConsumerState<WordBucketApp> {
 
   @override
   Widget build(BuildContext context) {
+    final themeMode = ref.watch(themeModeProvider);
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'WordBucket',
       debugShowCheckedModeBanner: false,
       theme: buildWordBucketTheme(),
+      darkTheme: buildWordBucketDarkTheme(),
+      themeMode: themeMode,
       color: Colors.transparent,
       home: widget.bucketifyMode
           ? const ColoredBox(color: Colors.transparent)

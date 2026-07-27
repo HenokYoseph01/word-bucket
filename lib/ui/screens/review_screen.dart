@@ -216,9 +216,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.8),
+            color: colors.surfaceContainerLow,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: const Color(0xFFEAE2D4)),
+            border: Border.all(color: colors.outlineVariant),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

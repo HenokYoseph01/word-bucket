@@ -10,3 +10,4 @@ const streakTaskUniqueName = 'wordbucket.streakReminder';
 const streakTaskName = 'streakReminder';
 const streakRemindersEnabledKey = 'streakRemindersEnabled';
 const lastReminderDateKey = 'lastReminderDate';
+const themeModeKey = 'themeMode';

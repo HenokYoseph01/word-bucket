@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../background/review_worker.dart';
+import '../../providers/theme_provider.dart';
 import '../../providers/word_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -93,6 +94,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final disabled = _loading || _updating;
+    final themeMode = ref.watch(themeModeProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings'), centerTitle: true),
@@ -102,6 +104,46 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           children: [
             _buildHeader(context),
             const SizedBox(height: 26),
+            const _SectionLabel(
+              icon: Icons.palette_outlined,
+              title: 'Appearance',
+              subtitle: 'Choose the reading atmosphere you prefer.',
+            ),
+            const SizedBox(height: 10),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<ThemeMode>(
+                    segments: const [
+                      ButtonSegment(
+                        value: ThemeMode.system,
+                        icon: Icon(Icons.brightness_auto_rounded),
+                        label: Text('System'),
+                      ),
+                      ButtonSegment(
+                        value: ThemeMode.light,
+                        icon: Icon(Icons.light_mode_outlined),
+                        label: Text('Light'),
+                      ),
+                      ButtonSegment(
+                        value: ThemeMode.dark,
+                        icon: Icon(Icons.dark_mode_outlined),
+                        label: Text('Dark'),
+                      ),
+                    ],
+                    selected: {themeMode},
+                    onSelectionChanged: (selection) {
+                      ref
+                          .read(themeModeProvider.notifier)
+                          .setMode(selection.first);
+                    },
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 28),
             const _SectionLabel(
               icon: Icons.notifications_none_rounded,
               title: 'Reminders',

@@ -209,9 +209,9 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
           width: double.infinity,
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.8),
+            color: colors.surfaceContainerLow,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFEAE2D4)),
+            border: Border.all(color: colors.outlineVariant),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
