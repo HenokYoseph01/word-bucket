@@ -1,41 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../background/review_worker.dart';
 import '../../providers/word_provider.dart';
 
-class StatisticsScreen extends ConsumerStatefulWidget {
+class StatisticsScreen extends ConsumerWidget {
   const StatisticsScreen({super.key});
 
   @override
-  ConsumerState<StatisticsScreen> createState() => _StatisticsScreenState();
-}
-
-class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
-  bool _streakRemindersEnabled = false;
-  bool _isUpdatingReminder = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadReminderSetting();
-  }
-
-  Future<void> _loadReminderSetting() async {
-    final enabled = await areStreakRemindersEnabled();
-    if (!mounted) return;
-    setState(() {
-      _streakRemindersEnabled = enabled;
-      _isUpdatingReminder = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final statistics = ref.watch(reviewStatisticsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Your progress')),
+      appBar: AppBar(title: const Text('Your progress'), centerTitle: true),
       body: SafeArea(
         child: statistics.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -50,108 +26,106 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
             },
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
               children: [
-                Card(
-                  child: Column(
-                    children: [
-                      SwitchListTile(
-                        secondary: const Icon(
-                          Icons.notifications_active_outlined,
-                        ),
-                        title: const Text('Streak reminder'),
-                        subtitle: const Text(
-                          'Around 1 PM, only when your streak is active, '
-                          'you have not reviewed today, and words are due.',
-                        ),
-                        value: _streakRemindersEnabled,
-                        onChanged: _isUpdatingReminder
-                            ? null
-                            : _setStreakReminder,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  childAspectRatio: 1.35,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
+                _ProgressHero(data: data),
+                const SizedBox(height: 14),
+                Row(
                   children: [
-                    _StatCard(
-                      icon: Icons.library_books_outlined,
-                      value: '${data.totalWords}',
-                      label: 'Words saved',
+                    Expanded(
+                      child: _MetricCard(
+                        icon: Icons.bookmarks_outlined,
+                        value: '${data.totalWords}',
+                        label: 'Words',
+                      ),
                     ),
-                    _StatCard(
-                      icon: Icons.schedule,
-                      value: '${data.dueWords}',
-                      label: 'Due now',
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _MetricCard(
+                        icon: Icons.fact_check_outlined,
+                        value: '${data.totalReviews}',
+                        label: 'Reviews',
+                      ),
                     ),
-                    _StatCard(
-                      icon: Icons.fact_check_outlined,
-                      value: '${data.totalReviews}',
-                      label: 'Reviews',
-                    ),
-                    _StatCard(
-                      icon: Icons.percent,
-                      value: '${(data.rememberedRate * 100).round()}%',
-                      label: 'Remembered',
-                    ),
-                    _StatCard(
-                      icon: Icons.local_fire_department_outlined,
-                      value: '${data.currentStreak}',
-                      label: 'Day${data.currentStreak == 1 ? '' : 's'} streak',
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _MetricCard(
+                        icon: Icons.schedule_rounded,
+                        value: '${data.dueWords}',
+                        label: 'Due',
+                        highlighted: data.dueWords > 0,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  'Upcoming reviews',
-                  style: Theme.of(context).textTheme.titleLarge,
+                const SizedBox(height: 28),
+                const _SectionHeading(
+                  icon: Icons.calendar_month_outlined,
+                  title: 'Coming up',
+                  subtitle: 'Your next scheduled reviews',
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 if (data.upcomingWords.isEmpty)
-                  const _EmptySection(message: 'No reviews are scheduled yet.')
-                else
-                  Card(
-                    child: Column(
-                      children: [
-                        for (final word in data.upcomingWords)
-                          ListTile(
-                            title: Text(word.word),
-                            trailing: Text(
-                              _formatReviewDate(word.nextReviewAt!),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                const SizedBox(height: 24),
-                Text(
-                  'Words to practise',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 8),
-                if (data.frequentlyMissedWords.isEmpty)
                   const _EmptySection(
-                    message: 'Missed words will appear here after reviews.',
+                    icon: Icons.event_available_rounded,
+                    message:
+                        'You’re all caught up. New reviews will appear here.',
                   )
                 else
                   Card(
+                    clipBehavior: Clip.antiAlias,
                     child: Column(
                       children: [
-                        for (final entry in data.frequentlyMissedWords)
-                          ListTile(
-                            title: Text(entry.key),
-                            trailing: Text(
-                              '${entry.value} ${entry.value == 1 ? 'miss' : 'misses'}',
+                        for (
+                          var index = 0;
+                          index < data.upcomingWords.length;
+                          index++
+                        ) ...[
+                          _UpcomingReviewTile(
+                            word: data.upcomingWords[index].word,
+                            date: _formatReviewDate(
+                              data.upcomingWords[index].nextReviewAt!,
                             ),
                           ),
+                          if (index < data.upcomingWords.length - 1)
+                            const Divider(height: 1, indent: 62),
+                        ],
                       ],
+                    ),
+                  ),
+                const SizedBox(height: 28),
+                const _SectionHeading(
+                  icon: Icons.fitness_center_rounded,
+                  title: 'Words to strengthen',
+                  subtitle: 'A little more practice will help these stick',
+                ),
+                const SizedBox(height: 10),
+                if (data.frequentlyMissedWords.isEmpty)
+                  const _EmptySection(
+                    icon: Icons.verified_outlined,
+                    message: 'No difficult words yet. Keep reviewing!',
+                  )
+                else
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(18),
+                      child: Column(
+                        children: [
+                          for (
+                            var index = 0;
+                            index < data.frequentlyMissedWords.length;
+                            index++
+                          ) ...[
+                            _PracticeWordRow(
+                              entry: data.frequentlyMissedWords[index],
+                              maximumMisses:
+                                  data.frequentlyMissedWords.first.value,
+                            ),
+                            if (index < data.frequentlyMissedWords.length - 1)
+                              const SizedBox(height: 18),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
               ],
@@ -162,46 +136,6 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     );
   }
 
-  Future<void> _setStreakReminder(bool enabled) async {
-    setState(() => _isUpdatingReminder = true);
-    try {
-      if (enabled) {
-        final granted = await ref
-            .read(notificationServiceProvider)
-            .requestPermission();
-        if (!mounted) return;
-        if (!granted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Enable notifications in Android settings to use reminders.',
-              ),
-            ),
-          );
-          return;
-        }
-      }
-
-      await setStreakRemindersEnabled(enabled);
-      if (!mounted) return;
-      setState(() => _streakRemindersEnabled = enabled);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            enabled ? 'Streak reminders are on.' : 'Streak reminders are off.',
-          ),
-        ),
-      );
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not update the reminder: $error')),
-      );
-    } finally {
-      if (mounted) setState(() => _isUpdatingReminder = false);
-    }
-  }
-
   String _formatReviewDate(DateTime date) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -209,34 +143,118 @@ class _StatisticsScreenState extends ConsumerState<StatisticsScreen> {
     final difference = reviewDay.difference(today).inDays;
     if (difference == 0) return 'Today';
     if (difference == 1) return 'Tomorrow';
+    if (difference < 7) return 'In $difference days';
     return '${date.day}/${date.month}/${date.year}';
   }
 }
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({
+class _ProgressHero extends StatelessWidget {
+  const _ProgressHero({required this.data});
+
+  final ReviewStatistics data;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final percentage = (data.rememberedRate * 100).round();
+
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: colors.primary,
+        borderRadius: BorderRadius.circular(26),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.local_fire_department_rounded,
+                  color: colors.tertiaryContainer,
+                  size: 30,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '${data.currentStreak} day${data.currentStreak == 1 ? '' : 's'}',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: colors.onPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  data.currentStreak == 0
+                      ? 'Complete a review to begin'
+                      : 'Your current review streak',
+                  style: TextStyle(
+                    color: colors.onPrimary.withValues(alpha: 0.72),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            children: [
+              SizedBox(
+                width: 72,
+                height: 72,
+                child: CircularProgressIndicator(
+                  value: data.totalReviews == 0 ? 0 : data.rememberedRate,
+                  strokeWidth: 9,
+                  strokeCap: StrokeCap.round,
+                  backgroundColor: colors.onPrimary.withValues(alpha: 0.16),
+                  color: colors.tertiaryContainer,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '$percentage% retained',
+                style: TextStyle(
+                  color: colors.onPrimary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetricCard extends StatelessWidget {
+  const _MetricCard({
     required this.icon,
     required this.value,
     required this.label,
+    this.highlighted = false,
   });
 
   final IconData icon;
   final String value;
   final String label;
+  final bool highlighted;
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Card(
+      color: highlighted ? colors.tertiaryContainer : null,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon),
-            const Spacer(),
-            Text(value, style: Theme.of(context).textTheme.headlineMedium),
-            Text(label, style: Theme.of(context).textTheme.bodyMedium),
+            Icon(icon, size: 20, color: colors.primary),
+            const SizedBox(height: 7),
+            Text(
+              value,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            Text(label, style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
       ),
@@ -244,15 +262,134 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _EmptySection extends StatelessWidget {
-  const _EmptySection({required this.message});
+class _SectionHeading extends StatelessWidget {
+  const _SectionHeading({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
 
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _UpcomingReviewTile extends StatelessWidget {
+  const _UpcomingReviewTile({required this.word, required this.date});
+
+  final String word;
+  final String date;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        child: const Icon(Icons.menu_book_rounded, size: 19),
+      ),
+      title: Text(word, style: const TextStyle(fontWeight: FontWeight.w700)),
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(date, style: Theme.of(context).textTheme.labelMedium),
+      ),
+    );
+  }
+}
+
+class _PracticeWordRow extends StatelessWidget {
+  const _PracticeWordRow({required this.entry, required this.maximumMisses});
+
+  final MapEntry<String, int> entry;
+  final int maximumMisses;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                entry.key,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+            Text(
+              '${entry.value} ${entry.value == 1 ? 'miss' : 'misses'}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: entry.value / maximumMisses,
+            minHeight: 7,
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _EmptySection extends StatelessWidget {
+  const _EmptySection({required this.icon, required this.message});
+
+  final IconData icon;
   final String message;
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(padding: const EdgeInsets.all(20), child: Text(message)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Icon(icon, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -271,8 +408,10 @@ class _StatisticsError extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const Icon(Icons.bar_chart_rounded, size: 44),
+            const SizedBox(height: 12),
             Text(
-              'Could not load statistics: $error',
+              'Could not load your progress.\n$error',
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
