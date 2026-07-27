@@ -37,6 +37,17 @@ class NotificationService {
           AndroidFlutterLocalNotificationsPlugin
         >()
         ?.createNotificationChannel(channel);
+    const streakChannel = AndroidNotificationChannel(
+      'streak_reminders',
+      'Gentle streak reminders',
+      description: 'Optional reminders to continue your review streak',
+      importance: Importance.defaultImportance,
+    );
+    await _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(streakChannel);
 
     _isInitialized = true;
   }
@@ -79,6 +90,30 @@ class NotificationService {
       title: 'Tap to review: ${word.word}',
       body: body,
       notificationDetails: NotificationDetails(android: androidDetails),
+      payload: word.word,
+    );
+  }
+
+  Future<void> showStreakReminder(SavedWord word, {required int streak}) async {
+    await initialize();
+
+    final body = streak > 0
+        ? 'A few words are ready when you are. A quick review keeps your '
+              '$streak-day rhythm going.'
+        : 'A few words are ready when you are. Take a moment to review.';
+    const androidDetails = AndroidNotificationDetails(
+      'streak_reminders',
+      'Gentle streak reminders',
+      channelDescription: 'Optional reminders to continue your review streak',
+      icon: 'ic_notification',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+    );
+    await _notifications.show(
+      id: 91827,
+      title: 'A little WordBucket moment?',
+      body: body,
+      notificationDetails: const NotificationDetails(android: androidDetails),
       payload: word.word,
     );
   }

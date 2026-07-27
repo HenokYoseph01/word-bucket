@@ -6,3 +6,7 @@ const finishBucketifyMethod = 'finishBucketify';
 const reviewTaskUniqueName = 'wordbucket.dailyReview';
 const reviewTaskName = 'wordReview';
 const reviewRemindersEnabledKey = 'reviewRemindersEnabled';
+const streakTaskUniqueName = 'wordbucket.streakReminder';
+const streakTaskName = 'streakReminder';
+const streakRemindersEnabledKey = 'streakRemindersEnabled';
+const lastReminderDateKey = 'lastReminderDate';
