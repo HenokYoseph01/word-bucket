@@ -14,7 +14,7 @@ class WordCard extends StatelessWidget {
     return Card(
       margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -37,10 +37,28 @@ class WordCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 8),
-            PartOfSpeechBadge(label: word.partOfSpeech),
-            const SizedBox(height: 12),
-            Text(word.definition),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                PartOfSpeechBadge(label: word.partOfSpeech),
+                const Spacer(),
+                Icon(
+                  Icons.bookmark_rounded,
+                  size: 19,
+                  color: Theme.of(context).colorScheme.tertiary,
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(
+              word.definition,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                height: 1.45,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
             if (word.exampleSentence != null) ...[
               const SizedBox(height: 10),
               Text(

@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../background/review_worker.dart';
 import '../../data/database/database.dart';
 import '../../data/database/word_dao.dart';
 import '../../providers/word_provider.dart';
 import 'review_screen.dart';
+import 'settings_screen.dart';
 import 'statistics_screen.dart';
 import '../widgets/definition_sheet.dart';
 import '../widgets/word_card.dart';
@@ -25,14 +25,11 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
   Timer? _suggestionDebounce;
   List<String> _suggestions = const [];
   int _suggestionRequest = 0;
-  bool _remindersEnabled = false;
-  bool _isUpdatingReminders = true;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _loadReminderSetting();
     ref.read(wordNotifierProvider.notifier).syncHomeWidget();
   }
 
@@ -59,15 +56,6 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
       ref.read(savedWordsProvider.future),
       ref.read(dueWordsProvider.future),
     ]);
-  }
-
-  Future<void> _loadReminderSetting() async {
-    final enabled = await areReviewRemindersEnabled();
-    if (!mounted) return;
-    setState(() {
-      _remindersEnabled = enabled;
-      _isUpdatingReminders = false;
-    });
   }
 
   Future<void> _lookUpWord() async {
@@ -100,27 +88,25 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     final wordsAsync = ref.watch(savedWordsProvider);
     final words = wordsAsync.valueOrNull ?? const <SavedWord>[];
     final dueWordsAsync = ref.watch(dueWordsProvider);
+    final statistics = ref.watch(reviewStatisticsProvider).valueOrNull;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'WordBucket',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'View progress',
-            onPressed: _openStatistics,
-            icon: const Icon(Icons.insights_outlined),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: 0,
+        onDestinationSelected: _openNavigationDestination,
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.bookmarks_outlined),
+            selectedIcon: Icon(Icons.bookmarks_rounded),
+            label: 'Bucket',
           ),
-          _buildReminderToggle(),
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Chip(
-              label: Text(
-                '${words.length} ${words.length == 1 ? 'word' : 'words'}',
-              ),
-            ),
+          NavigationDestination(
+            icon: Icon(Icons.insights_outlined),
+            label: 'Progress',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.tune_outlined),
+            label: 'Settings',
           ),
         ],
       ),
@@ -129,6 +115,8 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
+              _buildHeader(words.length),
+              const SizedBox(height: 20),
               _buildSearchField(),
               if (_suggestions.isNotEmpty) ...[
                 const SizedBox(height: 4),
@@ -139,6 +127,11 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
                 const SizedBox(height: 12),
                 _buildReviewBanner(dueWords),
               ],
+              if (statistics != null &&
+                  dueWordsAsync.valueOrNull?.isEmpty == true) ...[
+                const SizedBox(height: 12),
+                _buildProgressStrip(statistics),
+              ],
               const SizedBox(height: 16),
               Expanded(child: _buildSavedWords(wordsAsync)),
             ],
@@ -148,64 +141,90 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     );
   }
 
-  Widget _buildReminderToggle() {
+  Widget _buildHeader(int wordCount) {
     final colors = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: colors.primary,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Icon(Icons.auto_stories_rounded, color: colors.onPrimary),
+        ),
+        const SizedBox(width: 13),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'WordBucket',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              Text(
+                'Your personal reading companion',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: colors.secondaryContainer,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            '$wordCount',
+            style: TextStyle(
+              color: colors.onSecondaryContainer,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 6, right: 8, bottom: 6),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: _remindersEnabled
-              ? colors.primaryContainer
-              : colors.surfaceContainerHighest,
-        ),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            IconButton(
-              tooltip: _remindersEnabled
-                  ? 'Turn review reminders off'
-                  : 'Turn review reminders on',
-              onPressed: _isUpdatingReminders ? null : _toggleReminders,
-              icon: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                transitionBuilder: (child, animation) => ScaleTransition(
-                  scale: animation,
-                  child: RotationTransition(turns: animation, child: child),
-                ),
-                child: Icon(
-                  _remindersEnabled
-                      ? Icons.notifications_active_rounded
-                      : Icons.notifications_off_outlined,
-                  key: ValueKey(_remindersEnabled),
-                  color: _remindersEnabled
-                      ? colors.primary
-                      : colors.onSurfaceVariant,
-                ),
-              ),
-            ),
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 250),
-              right: _remindersEnabled ? 1 : 5,
-              top: _remindersEnabled ? 1 : 5,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                width: _remindersEnabled ? 9 : 0,
-                height: _remindersEnabled ? 9 : 0,
-                decoration: BoxDecoration(
-                  color: Colors.green.shade600,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: colors.surface, width: 1.5),
-                ),
-              ),
-            ),
-          ],
-        ),
+  Widget _buildProgressStrip(ReviewStatistics statistics) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(
+          context,
+        ).colorScheme.primaryContainer.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.local_fire_department_rounded, size: 20),
+          const SizedBox(width: 8),
+          Text('${statistics.currentStreak} day streak'),
+          const Spacer(),
+          Text(
+            '${statistics.totalReviews} reviews',
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ],
       ),
     );
+  }
+
+  void _openNavigationDestination(int index) {
+    if (index == 1) {
+      _openStatistics();
+    } else if (index == 2) {
+      Navigator.of(
+        context,
+      ).push<void>(MaterialPageRoute(builder: (_) => const SettingsScreen()));
+    }
   }
 
   Future<void> _openStatistics() async {
@@ -217,13 +236,14 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
 
   Widget _buildReviewBanner(List<SavedWord> dueWords) {
     return Card(
+      color: Theme.of(context).colorScheme.tertiaryContainer,
       child: ListTile(
-        leading: const Icon(Icons.school_outlined),
+        leading: const Icon(Icons.school_rounded),
         title: Text(
           '${dueWords.length} ${dueWords.length == 1 ? 'word is' : 'words are'} due',
         ),
         subtitle: const Text('Practise your due words now'),
-        trailing: const Icon(Icons.arrow_forward),
+        trailing: const Icon(Icons.arrow_forward_rounded),
         onTap: () => _openReviewQueue(dueWords),
       ),
     );
@@ -240,49 +260,6 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  Future<void> _toggleReminders() async {
-    final enable = !_remindersEnabled;
-    setState(() => _isUpdatingReminders = true);
-
-    try {
-      if (enable) {
-        final notifications = ref.read(notificationServiceProvider);
-        final granted = await notifications.requestPermission();
-        if (!mounted) return;
-        if (!granted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Notifications are disabled. Enable them in Android settings to receive reviews.',
-              ),
-            ),
-          );
-          return;
-        }
-      }
-
-      await setReviewRemindersEnabled(enable);
-      if (!mounted) return;
-      setState(() => _remindersEnabled = enable);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            enable
-                ? 'Daily review reminders are on.'
-                : 'Daily review reminders are off.',
-          ),
-        ),
-      );
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not update reminders: $error')),
-      );
-    } finally {
-      if (mounted) setState(() => _isUpdatingReminders = false);
-    }
   }
 
   Widget _buildSearchField() {
