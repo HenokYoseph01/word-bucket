@@ -542,15 +542,379 @@ class WordsCompanion extends UpdateCompanion<SavedWord> {
   }
 }
 
+class $ReviewAttemptsTable extends ReviewAttempts
+    with TableInfo<$ReviewAttemptsTable, ReviewAttempt> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ReviewAttemptsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _wordMeta = const VerificationMeta('word');
+  @override
+  late final GeneratedColumn<String> word = GeneratedColumn<String>(
+    'word',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _reviewedAtMeta = const VerificationMeta(
+    'reviewedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> reviewedAt = GeneratedColumn<DateTime>(
+    'reviewed_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rememberedMeta = const VerificationMeta(
+    'remembered',
+  );
+  @override
+  late final GeneratedColumn<bool> remembered = GeneratedColumn<bool>(
+    'remembered',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("remembered" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _reviewCountMeta = const VerificationMeta(
+    'reviewCount',
+  );
+  @override
+  late final GeneratedColumn<int> reviewCount = GeneratedColumn<int>(
+    'review_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    word,
+    reviewedAt,
+    remembered,
+    reviewCount,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'review_attempts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ReviewAttempt> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('word')) {
+      context.handle(
+        _wordMeta,
+        word.isAcceptableOrUnknown(data['word']!, _wordMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_wordMeta);
+    }
+    if (data.containsKey('reviewed_at')) {
+      context.handle(
+        _reviewedAtMeta,
+        reviewedAt.isAcceptableOrUnknown(data['reviewed_at']!, _reviewedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_reviewedAtMeta);
+    }
+    if (data.containsKey('remembered')) {
+      context.handle(
+        _rememberedMeta,
+        remembered.isAcceptableOrUnknown(data['remembered']!, _rememberedMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_rememberedMeta);
+    }
+    if (data.containsKey('review_count')) {
+      context.handle(
+        _reviewCountMeta,
+        reviewCount.isAcceptableOrUnknown(
+          data['review_count']!,
+          _reviewCountMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_reviewCountMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ReviewAttempt map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ReviewAttempt(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      word: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}word'],
+      )!,
+      reviewedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}reviewed_at'],
+      )!,
+      remembered: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}remembered'],
+      )!,
+      reviewCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}review_count'],
+      )!,
+    );
+  }
+
+  @override
+  $ReviewAttemptsTable createAlias(String alias) {
+    return $ReviewAttemptsTable(attachedDatabase, alias);
+  }
+}
+
+class ReviewAttempt extends DataClass implements Insertable<ReviewAttempt> {
+  final int id;
+  final String word;
+  final DateTime reviewedAt;
+  final bool remembered;
+  final int reviewCount;
+  const ReviewAttempt({
+    required this.id,
+    required this.word,
+    required this.reviewedAt,
+    required this.remembered,
+    required this.reviewCount,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['word'] = Variable<String>(word);
+    map['reviewed_at'] = Variable<DateTime>(reviewedAt);
+    map['remembered'] = Variable<bool>(remembered);
+    map['review_count'] = Variable<int>(reviewCount);
+    return map;
+  }
+
+  ReviewAttemptsCompanion toCompanion(bool nullToAbsent) {
+    return ReviewAttemptsCompanion(
+      id: Value(id),
+      word: Value(word),
+      reviewedAt: Value(reviewedAt),
+      remembered: Value(remembered),
+      reviewCount: Value(reviewCount),
+    );
+  }
+
+  factory ReviewAttempt.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ReviewAttempt(
+      id: serializer.fromJson<int>(json['id']),
+      word: serializer.fromJson<String>(json['word']),
+      reviewedAt: serializer.fromJson<DateTime>(json['reviewedAt']),
+      remembered: serializer.fromJson<bool>(json['remembered']),
+      reviewCount: serializer.fromJson<int>(json['reviewCount']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'word': serializer.toJson<String>(word),
+      'reviewedAt': serializer.toJson<DateTime>(reviewedAt),
+      'remembered': serializer.toJson<bool>(remembered),
+      'reviewCount': serializer.toJson<int>(reviewCount),
+    };
+  }
+
+  ReviewAttempt copyWith({
+    int? id,
+    String? word,
+    DateTime? reviewedAt,
+    bool? remembered,
+    int? reviewCount,
+  }) => ReviewAttempt(
+    id: id ?? this.id,
+    word: word ?? this.word,
+    reviewedAt: reviewedAt ?? this.reviewedAt,
+    remembered: remembered ?? this.remembered,
+    reviewCount: reviewCount ?? this.reviewCount,
+  );
+  ReviewAttempt copyWithCompanion(ReviewAttemptsCompanion data) {
+    return ReviewAttempt(
+      id: data.id.present ? data.id.value : this.id,
+      word: data.word.present ? data.word.value : this.word,
+      reviewedAt: data.reviewedAt.present
+          ? data.reviewedAt.value
+          : this.reviewedAt,
+      remembered: data.remembered.present
+          ? data.remembered.value
+          : this.remembered,
+      reviewCount: data.reviewCount.present
+          ? data.reviewCount.value
+          : this.reviewCount,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReviewAttempt(')
+          ..write('id: $id, ')
+          ..write('word: $word, ')
+          ..write('reviewedAt: $reviewedAt, ')
+          ..write('remembered: $remembered, ')
+          ..write('reviewCount: $reviewCount')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, word, reviewedAt, remembered, reviewCount);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ReviewAttempt &&
+          other.id == this.id &&
+          other.word == this.word &&
+          other.reviewedAt == this.reviewedAt &&
+          other.remembered == this.remembered &&
+          other.reviewCount == this.reviewCount);
+}
+
+class ReviewAttemptsCompanion extends UpdateCompanion<ReviewAttempt> {
+  final Value<int> id;
+  final Value<String> word;
+  final Value<DateTime> reviewedAt;
+  final Value<bool> remembered;
+  final Value<int> reviewCount;
+  const ReviewAttemptsCompanion({
+    this.id = const Value.absent(),
+    this.word = const Value.absent(),
+    this.reviewedAt = const Value.absent(),
+    this.remembered = const Value.absent(),
+    this.reviewCount = const Value.absent(),
+  });
+  ReviewAttemptsCompanion.insert({
+    this.id = const Value.absent(),
+    required String word,
+    required DateTime reviewedAt,
+    required bool remembered,
+    required int reviewCount,
+  }) : word = Value(word),
+       reviewedAt = Value(reviewedAt),
+       remembered = Value(remembered),
+       reviewCount = Value(reviewCount);
+  static Insertable<ReviewAttempt> custom({
+    Expression<int>? id,
+    Expression<String>? word,
+    Expression<DateTime>? reviewedAt,
+    Expression<bool>? remembered,
+    Expression<int>? reviewCount,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (word != null) 'word': word,
+      if (reviewedAt != null) 'reviewed_at': reviewedAt,
+      if (remembered != null) 'remembered': remembered,
+      if (reviewCount != null) 'review_count': reviewCount,
+    });
+  }
+
+  ReviewAttemptsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? word,
+    Value<DateTime>? reviewedAt,
+    Value<bool>? remembered,
+    Value<int>? reviewCount,
+  }) {
+    return ReviewAttemptsCompanion(
+      id: id ?? this.id,
+      word: word ?? this.word,
+      reviewedAt: reviewedAt ?? this.reviewedAt,
+      remembered: remembered ?? this.remembered,
+      reviewCount: reviewCount ?? this.reviewCount,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (word.present) {
+      map['word'] = Variable<String>(word.value);
+    }
+    if (reviewedAt.present) {
+      map['reviewed_at'] = Variable<DateTime>(reviewedAt.value);
+    }
+    if (remembered.present) {
+      map['remembered'] = Variable<bool>(remembered.value);
+    }
+    if (reviewCount.present) {
+      map['review_count'] = Variable<int>(reviewCount.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReviewAttemptsCompanion(')
+          ..write('id: $id, ')
+          ..write('word: $word, ')
+          ..write('reviewedAt: $reviewedAt, ')
+          ..write('remembered: $remembered, ')
+          ..write('reviewCount: $reviewCount')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $WordsTable words = $WordsTable(this);
+  late final $ReviewAttemptsTable reviewAttempts = $ReviewAttemptsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [words];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [words, reviewAttempts];
 }
 
 typedef $$WordsTableCreateCompanionBuilder =
@@ -813,10 +1177,214 @@ typedef $$WordsTableProcessedTableManager =
       SavedWord,
       PrefetchHooks Function()
     >;
+typedef $$ReviewAttemptsTableCreateCompanionBuilder =
+    ReviewAttemptsCompanion Function({
+      Value<int> id,
+      required String word,
+      required DateTime reviewedAt,
+      required bool remembered,
+      required int reviewCount,
+    });
+typedef $$ReviewAttemptsTableUpdateCompanionBuilder =
+    ReviewAttemptsCompanion Function({
+      Value<int> id,
+      Value<String> word,
+      Value<DateTime> reviewedAt,
+      Value<bool> remembered,
+      Value<int> reviewCount,
+    });
+
+class $$ReviewAttemptsTableFilterComposer
+    extends Composer<_$AppDatabase, $ReviewAttemptsTable> {
+  $$ReviewAttemptsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get word => $composableBuilder(
+    column: $table.word,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get reviewedAt => $composableBuilder(
+    column: $table.reviewedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get remembered => $composableBuilder(
+    column: $table.remembered,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get reviewCount => $composableBuilder(
+    column: $table.reviewCount,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ReviewAttemptsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ReviewAttemptsTable> {
+  $$ReviewAttemptsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get word => $composableBuilder(
+    column: $table.word,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get reviewedAt => $composableBuilder(
+    column: $table.reviewedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get remembered => $composableBuilder(
+    column: $table.remembered,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get reviewCount => $composableBuilder(
+    column: $table.reviewCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ReviewAttemptsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ReviewAttemptsTable> {
+  $$ReviewAttemptsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get word =>
+      $composableBuilder(column: $table.word, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get reviewedAt => $composableBuilder(
+    column: $table.reviewedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get remembered => $composableBuilder(
+    column: $table.remembered,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get reviewCount => $composableBuilder(
+    column: $table.reviewCount,
+    builder: (column) => column,
+  );
+}
+
+class $$ReviewAttemptsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ReviewAttemptsTable,
+          ReviewAttempt,
+          $$ReviewAttemptsTableFilterComposer,
+          $$ReviewAttemptsTableOrderingComposer,
+          $$ReviewAttemptsTableAnnotationComposer,
+          $$ReviewAttemptsTableCreateCompanionBuilder,
+          $$ReviewAttemptsTableUpdateCompanionBuilder,
+          (
+            ReviewAttempt,
+            BaseReferences<_$AppDatabase, $ReviewAttemptsTable, ReviewAttempt>,
+          ),
+          ReviewAttempt,
+          PrefetchHooks Function()
+        > {
+  $$ReviewAttemptsTableTableManager(
+    _$AppDatabase db,
+    $ReviewAttemptsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ReviewAttemptsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ReviewAttemptsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ReviewAttemptsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> word = const Value.absent(),
+                Value<DateTime> reviewedAt = const Value.absent(),
+                Value<bool> remembered = const Value.absent(),
+                Value<int> reviewCount = const Value.absent(),
+              }) => ReviewAttemptsCompanion(
+                id: id,
+                word: word,
+                reviewedAt: reviewedAt,
+                remembered: remembered,
+                reviewCount: reviewCount,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String word,
+                required DateTime reviewedAt,
+                required bool remembered,
+                required int reviewCount,
+              }) => ReviewAttemptsCompanion.insert(
+                id: id,
+                word: word,
+                reviewedAt: reviewedAt,
+                remembered: remembered,
+                reviewCount: reviewCount,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ReviewAttemptsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ReviewAttemptsTable,
+      ReviewAttempt,
+      $$ReviewAttemptsTableFilterComposer,
+      $$ReviewAttemptsTableOrderingComposer,
+      $$ReviewAttemptsTableAnnotationComposer,
+      $$ReviewAttemptsTableCreateCompanionBuilder,
+      $$ReviewAttemptsTableUpdateCompanionBuilder,
+      (
+        ReviewAttempt,
+        BaseReferences<_$AppDatabase, $ReviewAttemptsTable, ReviewAttempt>,
+      ),
+      ReviewAttempt,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
   $$WordsTableTableManager get words =>
       $$WordsTableTableManager(_db, _db.words);
+  $$ReviewAttemptsTableTableManager get reviewAttempts =>
+      $$ReviewAttemptsTableTableManager(_db, _db.reviewAttempts);
 }

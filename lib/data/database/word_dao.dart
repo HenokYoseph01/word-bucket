@@ -101,6 +101,35 @@ extension WordDao on AppDatabase {
       ),
     );
   }
+
+  Future<void> recordReviewAttempt(
+    SavedWord word, {
+    required bool remembered,
+    DateTime? reviewedAt,
+  }) {
+    return transaction(() async {
+      if (remembered) {
+        await advanceReviewSchedule(word);
+      } else {
+        await resetReviewSchedule(word);
+      }
+
+      await into(reviewAttempts).insert(
+        ReviewAttemptsCompanion.insert(
+          word: word.word,
+          reviewedAt: reviewedAt ?? DateTime.now(),
+          remembered: remembered,
+          reviewCount: remembered ? word.reviewCount + 1 : 0,
+        ),
+      );
+    });
+  }
+
+  Future<List<ReviewAttempt>> getReviewHistory() {
+    return (select(
+      reviewAttempts,
+    )..orderBy([(attempt) => OrderingTerm.desc(attempt.reviewedAt)])).get();
+  }
 }
 
 extension SavedWordModel on SavedWord {

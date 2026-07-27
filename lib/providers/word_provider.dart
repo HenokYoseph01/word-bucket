@@ -86,11 +86,7 @@ class WordNotifier extends StateNotifier<LookupState> {
   }
 
   Future<void> recordReview(SavedWord word, {required bool remembered}) async {
-    if (remembered) {
-      await _database.advanceReviewSchedule(word);
-    } else {
-      await _database.resetReviewSchedule(word);
-    }
+    await _database.recordReviewAttempt(word, remembered: remembered);
   }
 
   void clear() {

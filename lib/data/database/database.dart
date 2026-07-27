@@ -18,7 +18,16 @@ class Words extends Table {
   Set<Column<Object>> get primaryKey => {word};
 }
 
-@DriftDatabase(tables: [Words])
+@DataClassName('ReviewAttempt')
+class ReviewAttempts extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get word => text()();
+  DateTimeColumn get reviewedAt => dateTime()();
+  BoolColumn get remembered => boolean()();
+  IntColumn get reviewCount => integer()();
+}
+
+@DriftDatabase(tables: [Words, ReviewAttempts])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
     : super(
@@ -30,5 +39,17 @@ class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration {
+    return MigrationStrategy(
+      onCreate: (migrator) => migrator.createAll(),
+      onUpgrade: (migrator, from, to) async {
+        if (from < 2) {
+          await migrator.createTable(reviewAttempts);
+        }
+      },
+    );
+  }
 }
