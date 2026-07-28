@@ -131,11 +131,17 @@ int _calculateReviewStreak(List<ReviewAttempt> history, DateTime now) {
 }
 
 class LookupState {
-  const LookupState({this.isLoading = false, this.result, this.error});
+  const LookupState({
+    this.isLoading = false,
+    this.result,
+    this.error,
+    this.existingWord,
+  });
 
   final bool isLoading;
   final WordModel? result;
   final String? error;
+  final SavedWord? existingWord;
 }
 
 class WordNotifier extends StateNotifier<LookupState> {
@@ -149,6 +155,15 @@ class WordNotifier extends StateNotifier<LookupState> {
   Future<void> lookUp(String text) async {
     state = const LookupState(isLoading: true);
     try {
+      final normalizedWord = text.trim().toLowerCase();
+      final existingWord = await _database.getWord(normalizedWord);
+      if (existingWord != null) {
+        state = LookupState(
+          result: existingWord.toModel(),
+          existingWord: existingWord,
+        );
+        return;
+      }
       final result = await _dictionary.define(text);
       state = LookupState(result: result);
     } on DictionaryException catch (error) {

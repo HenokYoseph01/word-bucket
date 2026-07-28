@@ -152,7 +152,9 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
   }
 
   Widget _buildDefinition(BuildContext context) {
-    final word = ref.watch(wordNotifierProvider).result!;
+    final lookup = ref.watch(wordNotifierProvider);
+    final word = lookup.result!;
+    final existingWord = lookup.existingWord;
     final colors = Theme.of(context).colorScheme;
 
     return Column(
@@ -203,6 +205,36 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
           ],
         ),
         const SizedBox(height: 18),
+        if (existingWord != null) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: colors.tertiaryContainer,
+              borderRadius: BorderRadius.circular(17),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.check_circle_rounded,
+                  color: colors.onTertiaryContainer,
+                ),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: Text(
+                    'Already in your bucket · saved '
+                    '${_formatSavedDate(existingWord.savedAt)}',
+                    style: TextStyle(
+                      color: colors.onTertiaryContainer,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         PartOfSpeechBadge(label: word.partOfSpeech),
         const SizedBox(height: 16),
         Container(
@@ -266,34 +298,44 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
           ),
         ],
         const SizedBox(height: 22),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: _isSaving ? null : () => Navigator.pop(context),
-                child: const Text('Not now'),
-              ),
+        if (existingWord != null)
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.check_rounded),
+              label: const Text('Got it'),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              flex: 2,
-              child: FilledButton.icon(
-                onPressed: _isSaving ? null : _saveWord,
-                icon: _isSaving
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.bookmark_add_rounded),
-                label: Text(_isSaving ? 'Saving…' : 'Save to Bucket'),
+          )
+        else
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: _isSaving ? null : () => Navigator.pop(context),
+                  child: const Text('Not now'),
+                ),
               ),
-            ),
-          ],
-        ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: FilledButton.icon(
+                  onPressed: _isSaving ? null : _saveWord,
+                  icon: _isSaving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.bookmark_add_rounded),
+                  label: Text(_isSaving ? 'Saving…' : 'Save to Bucket'),
+                ),
+              ),
+            ],
+          ),
       ],
     );
   }
@@ -308,5 +350,23 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  String _formatSavedDate(DateTime date) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 }
