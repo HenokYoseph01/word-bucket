@@ -87,6 +87,14 @@ class WordWidgetProvider : AppWidgetProvider() {
                 setTextViewText(R.id.widget_word, word)
                 setTextViewText(R.id.widget_part_of_speech, partOfSpeech)
                 setTextViewText(R.id.widget_definition, definition)
+                setTextViewText(
+                    R.id.widget_position,
+                    if (items.isEmpty()) "0 words" else "${index + 1} / ${items.size}",
+                )
+                setViewVisibility(
+                    R.id.widget_part_of_speech,
+                    if (partOfSpeech.isNotEmpty()) View.VISIBLE else View.GONE,
+                )
                 setViewVisibility(
                     R.id.widget_refresh,
                     if (items.size > 1) View.VISIBLE else View.GONE,

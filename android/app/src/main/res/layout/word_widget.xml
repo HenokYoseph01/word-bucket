@@ -4,9 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
-    android:gravity="center_vertical"
     android:orientation="vertical"
-    android:padding="18dp">
+    android:padding="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,48 +14,84 @@
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/widget_word"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:text="No words yet"
-            android:textColor="#172033"
-            android:textSize="22sp"
+            android:text="WORDBUCKET"
+            android:textColor="@color/widget_accent"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.12" />
+
+        <TextView
+            android:id="@+id/widget_position"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:text="1 / 1"
+            android:textColor="@color/widget_muted"
+            android:textSize="11sp"
             android:textStyle="bold" />
 
         <ImageButton
             android:id="@+id/widget_refresh"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:background="@android:color/transparent"
             android:contentDescription="@string/refresh_word"
-            android:padding="8dp"
+            android:padding="6dp"
             android:src="@drawable/ic_widget_refresh" />
-
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_word"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="No words yet"
+        android:textColor="@color/widget_text"
+        android:textSize="25sp"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/widget_part_of_speech"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="7dp"
+        android:background="@drawable/widget_badge_background"
         android:ellipsize="end"
         android:maxLines="1"
-        android:textColor="#3566D6"
-        android:textSize="12sp"
+        android:paddingStart="9dp"
+        android:paddingTop="3dp"
+        android:paddingEnd="9dp"
+        android:paddingBottom="3dp"
+        android:textColor="@color/widget_badge_text"
+        android:textSize="11sp"
         android:textStyle="bold" />
 
     <TextView
         android:id="@+id/widget_definition"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="9dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="10dp"
+        android:layout_weight="1"
         android:ellipsize="end"
+        android:gravity="top"
         android:maxLines="3"
         android:text="Save a word in WordBucket to see it here."
-        android:textColor="#4A5264"
-        android:textSize="14sp" />
+        android:textColor="@color/widget_muted"
+        android:textSize="14sp"
+        android:lineSpacingMultiplier="1.12" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:gravity="end"
+        android:text="Tap to open"
+        android:textColor="@color/widget_hint"
+        android:textSize="10sp" />
 
 </LinearLayout>
