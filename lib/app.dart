@@ -7,7 +7,7 @@ import 'core/theme.dart';
 import 'data/database/word_dao.dart';
 import 'providers/word_provider.dart';
 import 'providers/theme_provider.dart';
-import 'ui/screens/bucket_screen.dart';
+import 'ui/screens/app_launch_screen.dart';
 import 'ui/screens/review_screen.dart';
 import 'ui/widgets/definition_sheet.dart';
 
@@ -174,7 +174,7 @@ class _WordBucketAppState extends ConsumerState<WordBucketApp> {
       color: Colors.transparent,
       home: widget.bucketifyMode
           ? const ColoredBox(color: Colors.transparent)
-          : const BucketScreen(),
+          : const AppLaunchScreen(),
     );
   }
 }
