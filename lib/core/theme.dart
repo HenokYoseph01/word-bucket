@@ -6,6 +6,7 @@ enum AppPalette {
   sepiaLibrary,
   plumNotebook,
   midnightBlue,
+  monochromePaper,
 }
 
 extension AppPaletteDetails on AppPalette {
@@ -15,6 +16,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.sepiaLibrary => 'Sepia Library',
     AppPalette.plumNotebook => 'Plum Notebook',
     AppPalette.midnightBlue => 'Midnight Blue',
+    AppPalette.monochromePaper => 'Monochrome Paper',
   };
 
   Color get seed => switch (this) {
@@ -23,6 +25,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.sepiaLibrary => const Color(0xFF6B4932),
     AppPalette.plumNotebook => const Color(0xFF65445F),
     AppPalette.midnightBlue => const Color(0xFF354B6B),
+    AppPalette.monochromePaper => const Color(0xFF111111),
   };
 
   Color get accent => switch (this) {
@@ -31,6 +34,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.sepiaLibrary => const Color(0xFFB7793F),
     AppPalette.plumNotebook => const Color(0xFFD09A5B),
     AppPalette.midnightBlue => const Color(0xFF8FAED1),
+    AppPalette.monochromePaper => const Color(0xFF777777),
   };
 
   Color get lightPaper => switch (this) {
@@ -39,6 +43,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.sepiaLibrary => const Color(0xFFFFF5DF),
     AppPalette.plumNotebook => const Color(0xFFFFF7FA),
     AppPalette.midnightBlue => const Color(0xFFF6F8FC),
+    AppPalette.monochromePaper => const Color(0xFFFFFFFF),
   };
 
   Color get darkPaper => switch (this) {
@@ -47,6 +52,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.sepiaLibrary => const Color(0xFF211813),
     AppPalette.plumNotebook => const Color(0xFF20171F),
     AppPalette.midnightBlue => const Color(0xFF111821),
+    AppPalette.monochromePaper => const Color(0xFF000000),
   };
 }
 
@@ -67,6 +73,9 @@ ThemeData _buildTheme(Brightness brightness, AppPalette palette) {
     seedColor: palette.seed,
     brightness: brightness,
     surface: paper,
+    dynamicSchemeVariant: palette == AppPalette.monochromePaper
+        ? DynamicSchemeVariant.monochrome
+        : DynamicSchemeVariant.tonalSpot,
   );
   final scheme = baseScheme.copyWith(
     tertiary: palette.accent,
