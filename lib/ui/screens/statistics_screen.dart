@@ -61,6 +61,22 @@ class StatisticsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 28),
                 const _SectionHeading(
+                  icon: Icons.bar_chart_rounded,
+                  title: 'Last 7 days',
+                  subtitle: 'Your recent review rhythm',
+                ),
+                const SizedBox(height: 10),
+                _WeeklyActivityCard(data: data),
+                const SizedBox(height: 28),
+                const _SectionHeading(
+                  icon: Icons.event_note_rounded,
+                  title: 'Review forecast',
+                  subtitle: 'What your next few days look like',
+                ),
+                const SizedBox(height: 10),
+                _ReviewForecast(data: data),
+                const SizedBox(height: 28),
+                const _SectionHeading(
                   icon: Icons.donut_large_rounded,
                   title: 'Word mastery',
                   subtitle: 'How securely your vocabulary is settling in',
@@ -323,6 +339,267 @@ class _UpcomingReviewTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(date, style: Theme.of(context).textTheme.labelMedium),
+      ),
+    );
+  }
+}
+
+class _WeeklyActivityCard extends StatelessWidget {
+  const _WeeklyActivityCard({required this.data});
+
+  final ReviewStatistics data;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final maximum = data.weeklyActivity.fold<int>(
+      1,
+      (value, day) => day.reviews > value ? day.reviews : value,
+    );
+    final totalReviews = data.weeklyActivity.fold<int>(
+      0,
+      (total, day) => total + day.reviews,
+    );
+    final wordsAdded = data.weeklyActivity.fold<int>(
+      0,
+      (total, day) => total + day.wordsAdded,
+    );
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _ActivitySummary(
+                    value: '$totalReviews',
+                    label: 'Reviews',
+                  ),
+                ),
+                Expanded(
+                  child: _ActivitySummary(
+                    value: '$wordsAdded',
+                    label: 'Words added',
+                  ),
+                ),
+                Expanded(
+                  child: _ActivitySummary(
+                    value: '${data.longestStreak}',
+                    label: 'Best streak',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 22),
+            SizedBox(
+              height: 128,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  for (final day in data.weeklyActivity)
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${day.reviews}',
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                          const SizedBox(height: 5),
+                          Expanded(
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                final heightFactor = day.reviews == 0
+                                    ? 0.08
+                                    : 0.2 + (0.8 * day.reviews / maximum);
+                                return Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: Tooltip(
+                                    message:
+                                        '${day.remembered}/${day.reviews} remembered',
+                                    child: Container(
+                                      width: 18,
+                                      height:
+                                          constraints.maxHeight * heightFactor,
+                                      decoration: BoxDecoration(
+                                        color: colors.primary.withValues(
+                                          alpha: day.reviews == 0
+                                              ? 0.18
+                                              : 0.38 +
+                                                    (day.rememberedRate * 0.62),
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                          999,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 7),
+                          Text(
+                            _weekday(day.date.weekday),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(color: colors.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (data.mostActiveDay case final mostActive?) ...[
+              const Divider(height: 26),
+              Row(
+                children: [
+                  Icon(Icons.bolt_rounded, size: 18, color: colors.primary),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      '${_weekday(mostActive.date.weekday, full: true)} was your '
+                      'most active day with ${mostActive.reviews} reviews.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _weekday(int weekday, {bool full = false}) {
+    const short = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const long = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+    return (full ? long : short)[weekday - 1];
+  }
+}
+
+class _ActivitySummary extends StatelessWidget {
+  const _ActivitySummary({required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+      ],
+    );
+  }
+}
+
+class _ReviewForecast extends StatelessWidget {
+  const _ReviewForecast({required this.data});
+
+  final ReviewStatistics data;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _ForecastItem(
+                label: 'Overdue',
+                value: data.overdueWords,
+                icon: Icons.warning_amber_rounded,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _ForecastItem(
+                label: 'Today',
+                value: data.dueToday,
+                icon: Icons.today_rounded,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _ForecastItem(
+                label: 'Tomorrow',
+                value: data.dueTomorrow,
+                icon: Icons.next_plan_outlined,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _ForecastItem(
+                label: 'Next 7 days',
+                value: data.dueThisWeek,
+                icon: Icons.date_range_rounded,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ForecastItem extends StatelessWidget {
+  const _ForecastItem({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final int value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Card(
+      color: value > 0 ? colors.secondaryContainer : null,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Icon(icon, color: colors.primary),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$value',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                Text(label, style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

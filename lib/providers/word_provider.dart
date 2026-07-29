@@ -49,6 +49,12 @@ class ReviewStatistics {
     required this.currentStreak,
     required this.upcomingWords,
     required this.wordMastery,
+    required this.weeklyActivity,
+    required this.longestStreak,
+    required this.overdueWords,
+    required this.dueToday,
+    required this.dueTomorrow,
+    required this.dueThisWeek,
   });
 
   final int totalWords;
@@ -58,6 +64,12 @@ class ReviewStatistics {
   final int currentStreak;
   final List<SavedWord> upcomingWords;
   final List<WordMastery> wordMastery;
+  final List<DailyReviewActivity> weeklyActivity;
+  final int longestStreak;
+  final int overdueWords;
+  final int dueToday;
+  final int dueTomorrow;
+  final int dueThisWeek;
 
   double get rememberedRate =>
       totalReviews == 0 ? 0 : rememberedReviews / totalReviews;
@@ -80,6 +92,29 @@ class ReviewStatistics {
           ..sort((a, b) => a.strengthScore.compareTo(b.strengthScore));
     return reviewed.take(5).toList(growable: false);
   }
+
+  DailyReviewActivity? get mostActiveDay {
+    if (weeklyActivity.every((day) => day.reviews == 0)) return null;
+    return weeklyActivity.reduce(
+      (best, day) => day.reviews > best.reviews ? day : best,
+    );
+  }
+}
+
+class DailyReviewActivity {
+  const DailyReviewActivity({
+    required this.date,
+    required this.reviews,
+    required this.remembered,
+    required this.wordsAdded,
+  });
+
+  final DateTime date;
+  final int reviews;
+  final int remembered;
+  final int wordsAdded;
+
+  double get rememberedRate => reviews == 0 ? 0 : remembered / reviews;
 }
 
 enum MasteryLevel { newWord, learning, strong, needsPractice }
@@ -115,6 +150,10 @@ final reviewStatisticsProvider = FutureProvider<ReviewStatistics>((ref) async {
   final dueWords = results[1] as List<SavedWord>;
   final history = results[2] as List<ReviewAttempt>;
   final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final tomorrow = today.add(const Duration(days: 1));
+  final dayAfterTomorrow = tomorrow.add(const Duration(days: 1));
+  final endOfForecast = today.add(const Duration(days: 8));
 
   final mastery = words
       .map((word) {
@@ -165,6 +204,58 @@ final reviewStatisticsProvider = FutureProvider<ReviewStatistics>((ref) async {
           .toList()
         ..sort((a, b) => a.nextReviewAt!.compareTo(b.nextReviewAt!));
 
+  final weeklyActivity = List.generate(7, (index) {
+    final date = today.subtract(Duration(days: 6 - index));
+    final nextDate = date.add(const Duration(days: 1));
+    final dayReviews = history.where(
+      (attempt) =>
+          !attempt.reviewedAt.isBefore(date) &&
+          attempt.reviewedAt.isBefore(nextDate),
+    );
+    return DailyReviewActivity(
+      date: date,
+      reviews: dayReviews.length,
+      remembered: dayReviews.where((attempt) => attempt.remembered).length,
+      wordsAdded: words
+          .where(
+            (word) =>
+                !word.savedAt.isBefore(date) && word.savedAt.isBefore(nextDate),
+          )
+          .length,
+    );
+  });
+
+  final overdueWords = words
+      .where(
+        (word) =>
+            word.nextReviewAt == null || word.nextReviewAt!.isBefore(today),
+      )
+      .length;
+  final dueToday = words
+      .where(
+        (word) =>
+            word.nextReviewAt != null &&
+            !word.nextReviewAt!.isBefore(today) &&
+            word.nextReviewAt!.isBefore(tomorrow),
+      )
+      .length;
+  final dueTomorrow = words
+      .where(
+        (word) =>
+            word.nextReviewAt != null &&
+            !word.nextReviewAt!.isBefore(tomorrow) &&
+            word.nextReviewAt!.isBefore(dayAfterTomorrow),
+      )
+      .length;
+  final dueThisWeek = words
+      .where(
+        (word) =>
+            word.nextReviewAt != null &&
+            !word.nextReviewAt!.isBefore(dayAfterTomorrow) &&
+            word.nextReviewAt!.isBefore(endOfForecast),
+      )
+      .length;
+
   return ReviewStatistics(
     totalWords: words.length,
     dueWords: dueWords.length,
@@ -173,8 +264,42 @@ final reviewStatisticsProvider = FutureProvider<ReviewStatistics>((ref) async {
     currentStreak: _calculateReviewStreak(history, now),
     upcomingWords: upcoming.take(5).toList(growable: false),
     wordMastery: mastery,
+    weeklyActivity: weeklyActivity,
+    longestStreak: _calculateLongestStreak(history),
+    overdueWords: overdueWords,
+    dueToday: dueToday,
+    dueTomorrow: dueTomorrow,
+    dueThisWeek: dueThisWeek,
   );
 });
+
+int _calculateLongestStreak(List<ReviewAttempt> history) {
+  final days =
+      history
+          .map(
+            (attempt) => DateTime(
+              attempt.reviewedAt.year,
+              attempt.reviewedAt.month,
+              attempt.reviewedAt.day,
+            ),
+          )
+          .toSet()
+          .toList()
+        ..sort();
+  if (days.isEmpty) return 0;
+
+  var longest = 1;
+  var current = 1;
+  for (var index = 1; index < days.length; index++) {
+    if (days[index].difference(days[index - 1]).inDays == 1) {
+      current++;
+      if (current > longest) longest = current;
+    } else {
+      current = 1;
+    }
+  }
+  return longest;
+}
 
 int _calculateReviewStreak(List<ReviewAttempt> history, DateTime now) {
   if (history.isEmpty) return 0;
