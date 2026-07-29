@@ -6,6 +6,12 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
 import android.view.View
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetPlugin
@@ -65,6 +71,11 @@ class WordWidgetProvider : AppWidgetProvider() {
         val word = item?.word ?: "No words yet"
         val partOfSpeech = item?.partOfSpeech.orEmpty()
         val definition = item?.definition ?: "Save a word in WordBucket to see it here."
+        val appearance = resolveAppearance(
+            widgetData.getString("themePalette", "classicInk") ?: "classicInk",
+            widgetData.getString("themeMode", "system") ?: "system",
+            context,
+        )
 
         val openAppPendingIntent = PendingIntent.getActivity(
             context,
@@ -87,12 +98,39 @@ class WordWidgetProvider : AppWidgetProvider() {
                 setTextViewText(R.id.widget_word, word)
                 setTextViewText(R.id.widget_part_of_speech, partOfSpeech)
                 setTextViewText(R.id.widget_definition, definition)
+                setTextColor(R.id.widget_brand, appearance.accent)
+                setTextColor(R.id.widget_word, appearance.text)
+                setTextColor(R.id.widget_part_of_speech, appearance.badgeText)
+                setTextColor(R.id.widget_definition, appearance.muted)
+                setTextColor(R.id.widget_position, appearance.muted)
+                setTextColor(R.id.widget_open_hint, appearance.hint)
+                setImageViewBitmap(
+                    R.id.widget_background_surface,
+                    roundedBackground(
+                        widthPx = 360,
+                        heightPx = 240,
+                        radiusPx = 20f,
+                        fill = appearance.background,
+                        border = appearance.border,
+                    ),
+                )
+                setImageViewBitmap(
+                    R.id.widget_badge_surface,
+                    roundedBackground(
+                        widthPx = 180,
+                        heightPx = 50,
+                        radiusPx = 25f,
+                        fill = appearance.badgeBackground,
+                        border = appearance.badgeBackground,
+                    ),
+                )
+                setInt(R.id.widget_refresh, "setColorFilter", appearance.accent)
                 setTextViewText(
                     R.id.widget_position,
                     if (items.isEmpty()) "0 words" else "${index + 1} / ${items.size}",
                 )
                 setViewVisibility(
-                    R.id.widget_part_of_speech,
+                    R.id.widget_badge,
                     if (partOfSpeech.isNotEmpty()) View.VISIBLE else View.GONE,
                 )
                 setViewVisibility(
@@ -126,9 +164,111 @@ class WordWidgetProvider : AppWidgetProvider() {
         return (value as? Number)?.toInt() ?: fallback
     }
 
+    private fun resolveAppearance(
+        palette: String,
+        themeMode: String,
+        context: Context,
+    ): WidgetAppearance {
+        val systemDark =
+            context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
+                Configuration.UI_MODE_NIGHT_YES
+        val dark = themeMode == "dark" || (themeMode == "system" && systemDark)
+
+        return when (palette) {
+            "forestJournal" -> if (dark) {
+                WidgetAppearance("#121C17", "#405048", "#EDF5EF", "#B8C7BD", "#839087", "#C79A45", "#314B3B", "#E4EEE7")
+            } else {
+                WidgetAppearance("#FBF8ED", "#DED8C7", "#315B45", "#5D6B61", "#8A938C", "#8A6525", "#DFEBDD", "#315B45")
+            }
+            "sepiaLibrary" -> if (dark) {
+                WidgetAppearance("#211813", "#554238", "#FFF1DF", "#D4C1B0", "#9C8B7F", "#D5A06B", "#51382A", "#F2DDC8")
+            } else {
+                WidgetAppearance("#FFF5DF", "#E8D7BB", "#6B4932", "#735F50", "#9A8876", "#9A5D2D", "#F2DFC4", "#6B4932")
+            }
+            "plumNotebook" -> if (dark) {
+                WidgetAppearance("#20171F", "#523D50", "#F9EDF7", "#D1BECF", "#998896", "#D09A5B", "#4D3449", "#F1DDEE")
+            } else {
+                WidgetAppearance("#FFF7FA", "#E8D8E3", "#65445F", "#725F6E", "#998994", "#9A643D", "#F0DFEB", "#65445F")
+            }
+            "midnightBlue" -> if (dark) {
+                WidgetAppearance("#111821", "#35475B", "#EEF3FA", "#BAC6D4", "#8290A0", "#8FAED1", "#2E4056", "#E0E9F4")
+            } else {
+                WidgetAppearance("#F6F8FC", "#D8DFEA", "#354B6B", "#5C687A", "#8791A0", "#55769D", "#DEE7F2", "#354B6B")
+            }
+            "monochromePaper" -> if (dark) {
+                WidgetAppearance("#000000", "#444444", "#FFFFFF", "#C8C8C8", "#888888", "#D0D0D0", "#292929", "#FFFFFF")
+            } else {
+                WidgetAppearance("#FFFFFF", "#D8D8D8", "#111111", "#555555", "#888888", "#333333", "#E8E8E8", "#111111")
+            }
+            else -> if (dark) {
+                WidgetAppearance("#111A1D", "#3F4B4F", "#F0F5F3", "#BCC8C6", "#899694", "#B5CCC7", "#314B4B", "#DCE8E3")
+            } else {
+                WidgetAppearance("#FFFFFBF3", "#E2D9CA", "#203A43", "#59686B", "#899294", "#315B61", "#DCE8E3", "#203A43")
+            }
+        }
+    }
+
+    private fun roundedBackground(
+        widthPx: Int,
+        heightPx: Int,
+        radiusPx: Float,
+        fill: Int,
+        border: Int,
+    ): Bitmap {
+        val width = widthPx
+        val height = heightPx
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val rect = RectF(1f, 1f, width - 1f, height - 1f)
+        val radius = radiusPx
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.FILL
+            color = fill
+        }
+        canvas.drawRoundRect(rect, radius, radius, paint)
+        paint.apply {
+            style = Paint.Style.STROKE
+            strokeWidth = 1.5f
+            color = border
+        }
+        canvas.drawRoundRect(rect, radius, radius, paint)
+        return bitmap
+    }
+
     private data class WidgetWord(
         val word: String,
         val partOfSpeech: String,
         val definition: String,
     )
+
+    private data class WidgetAppearance(
+        val background: Int,
+        val border: Int,
+        val text: Int,
+        val muted: Int,
+        val hint: Int,
+        val accent: Int,
+        val badgeBackground: Int,
+        val badgeText: Int,
+    ) {
+        constructor(
+            background: String,
+            border: String,
+            text: String,
+            muted: String,
+            hint: String,
+            accent: String,
+            badgeBackground: String,
+            badgeText: String,
+        ) : this(
+            Color.parseColor(background),
+            Color.parseColor(border),
+            Color.parseColor(text),
+            Color.parseColor(muted),
+            Color.parseColor(hint),
+            Color.parseColor(accent),
+            Color.parseColor(badgeBackground),
+            Color.parseColor(badgeText),
+        )
+    }
 }
