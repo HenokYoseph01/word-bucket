@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/word_provider.dart';
+import 'word_progress_screen.dart';
 
 class StatisticsScreen extends ConsumerWidget {
   const StatisticsScreen({super.key});
@@ -60,6 +61,38 @@ class StatisticsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 28),
                 const _SectionHeading(
+                  icon: Icons.donut_large_rounded,
+                  title: 'Word mastery',
+                  subtitle: 'How securely your vocabulary is settling in',
+                ),
+                const SizedBox(height: 10),
+                _MasteryOverview(data: data),
+                const SizedBox(height: 28),
+                const _SectionHeading(
+                  icon: Icons.emoji_events_outlined,
+                  title: 'Strongest words',
+                  subtitle: 'Words you remember most reliably',
+                ),
+                const SizedBox(height: 10),
+                _RankedWordList(
+                  words: data.strongestWords,
+                  emptyMessage: 'Complete a few reviews to discover strengths.',
+                  strongest: true,
+                ),
+                const SizedBox(height: 28),
+                const _SectionHeading(
+                  icon: Icons.fitness_center_rounded,
+                  title: 'Needs attention',
+                  subtitle: 'Words that would benefit from more practice',
+                ),
+                const SizedBox(height: 10),
+                _RankedWordList(
+                  words: data.weakestWords,
+                  emptyMessage: 'No reviewed words need attention yet.',
+                  strongest: false,
+                ),
+                const SizedBox(height: 28),
+                const _SectionHeading(
                   icon: Icons.calendar_month_outlined,
                   title: 'Coming up',
                   subtitle: 'Your next scheduled reviews',
@@ -91,41 +124,6 @@ class StatisticsScreen extends ConsumerWidget {
                             const Divider(height: 1, indent: 62),
                         ],
                       ],
-                    ),
-                  ),
-                const SizedBox(height: 28),
-                const _SectionHeading(
-                  icon: Icons.fitness_center_rounded,
-                  title: 'Words to strengthen',
-                  subtitle: 'A little more practice will help these stick',
-                ),
-                const SizedBox(height: 10),
-                if (data.frequentlyMissedWords.isEmpty)
-                  const _EmptySection(
-                    icon: Icons.verified_outlined,
-                    message: 'No difficult words yet. Keep reviewing!',
-                  )
-                else
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(18),
-                      child: Column(
-                        children: [
-                          for (
-                            var index = 0;
-                            index < data.frequentlyMissedWords.length;
-                            index++
-                          ) ...[
-                            _PracticeWordRow(
-                              entry: data.frequentlyMissedWords[index],
-                              maximumMisses:
-                                  data.frequentlyMissedWords.first.value,
-                            ),
-                            if (index < data.frequentlyMissedWords.length - 1)
-                              const SizedBox(height: 18),
-                          ],
-                        ],
-                      ),
                     ),
                   ),
               ],
@@ -330,43 +328,140 @@ class _UpcomingReviewTile extends StatelessWidget {
   }
 }
 
-class _PracticeWordRow extends StatelessWidget {
-  const _PracticeWordRow({required this.entry, required this.maximumMisses});
+class _MasteryOverview extends StatelessWidget {
+  const _MasteryOverview({required this.data});
 
-  final MapEntry<String, int> entry;
-  final int maximumMisses;
+  final ReviewStatistics data;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: [
-            Expanded(
-              child: Text(
-                entry.key,
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
+            _MasteryChip(
+              label: 'Strong',
+              count: data.masteryCount(MasteryLevel.strong),
+              color: Colors.green,
             ),
-            Text(
-              '${entry.value} ${entry.value == 1 ? 'miss' : 'misses'}',
-              style: Theme.of(context).textTheme.bodySmall,
+            _MasteryChip(
+              label: 'Learning',
+              count: data.masteryCount(MasteryLevel.learning),
+              color: Colors.blue,
+            ),
+            _MasteryChip(
+              label: 'Needs practice',
+              count: data.masteryCount(MasteryLevel.needsPractice),
+              color: Colors.orange,
+            ),
+            _MasteryChip(
+              label: 'New',
+              count: data.masteryCount(MasteryLevel.newWord),
+              color: Theme.of(context).colorScheme.outline,
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(999),
-          child: LinearProgressIndicator(
-            value: entry.value / maximumMisses,
-            minHeight: 7,
-            backgroundColor: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest,
-          ),
-        ),
-      ],
+      ),
+    );
+  }
+}
+
+class _MasteryChip extends StatelessWidget {
+  const _MasteryChip({
+    required this.label,
+    required this.count,
+    required this.color,
+  });
+
+  final String label;
+  final int count;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        '$count $label',
+        style: TextStyle(color: color, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+}
+
+class _RankedWordList extends StatelessWidget {
+  const _RankedWordList({
+    required this.words,
+    required this.emptyMessage,
+    required this.strongest,
+  });
+
+  final List<WordMastery> words;
+  final String emptyMessage;
+  final bool strongest;
+
+  @override
+  Widget build(BuildContext context) {
+    if (words.isEmpty) {
+      return _EmptySection(
+        icon: strongest
+            ? Icons.hourglass_empty_rounded
+            : Icons.verified_outlined,
+        message: emptyMessage,
+      );
+    }
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (var index = 0; index < words.length; index++) ...[
+            ListTile(
+              leading: CircleAvatar(
+                backgroundColor: (strongest ? Colors.green : Colors.orange)
+                    .withValues(alpha: 0.14),
+                child: Icon(
+                  strongest
+                      ? Icons.trending_up_rounded
+                      : Icons.priority_high_rounded,
+                  color: strongest ? Colors.green : Colors.orange,
+                ),
+              ),
+              title: Text(
+                words[index].word.word,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              subtitle: Text(
+                '${words[index].remembered}/${words[index].attempts} remembered',
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${(words[index].recallRate * 100).round()}%',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.chevron_right_rounded),
+                ],
+              ),
+              onTap: () => Navigator.of(context).push<void>(
+                MaterialPageRoute(
+                  builder: (_) => WordProgressScreen(mastery: words[index]),
+                ),
+              ),
+            ),
+            if (index < words.length - 1) const Divider(height: 1, indent: 72),
+          ],
+        ],
+      ),
     );
   }
 }

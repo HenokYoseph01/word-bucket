@@ -48,7 +48,7 @@ class ReviewStatistics {
     required this.rememberedReviews,
     required this.currentStreak,
     required this.upcomingWords,
-    required this.frequentlyMissedWords,
+    required this.wordMastery,
   });
 
   final int totalWords;
@@ -57,10 +57,51 @@ class ReviewStatistics {
   final int rememberedReviews;
   final int currentStreak;
   final List<SavedWord> upcomingWords;
-  final List<MapEntry<String, int>> frequentlyMissedWords;
+  final List<WordMastery> wordMastery;
 
   double get rememberedRate =>
       totalReviews == 0 ? 0 : rememberedReviews / totalReviews;
+
+  int masteryCount(MasteryLevel level) =>
+      wordMastery.where((word) => word.level == level).length;
+
+  List<WordMastery> get strongestWords {
+    final reviewed =
+        wordMastery.where((word) => word.level == MasteryLevel.strong).toList()
+          ..sort((a, b) => b.strengthScore.compareTo(a.strengthScore));
+    return reviewed.take(5).toList(growable: false);
+  }
+
+  List<WordMastery> get weakestWords {
+    final reviewed =
+        wordMastery
+            .where((word) => word.level == MasteryLevel.needsPractice)
+            .toList()
+          ..sort((a, b) => a.strengthScore.compareTo(b.strengthScore));
+    return reviewed.take(5).toList(growable: false);
+  }
+}
+
+enum MasteryLevel { newWord, learning, strong, needsPractice }
+
+class WordMastery {
+  const WordMastery({
+    required this.word,
+    required this.history,
+    required this.remembered,
+    required this.level,
+    required this.strengthScore,
+  });
+
+  final SavedWord word;
+  final List<ReviewAttempt> history;
+  final int remembered;
+  final MasteryLevel level;
+  final double strengthScore;
+
+  int get attempts => history.length;
+  int get missed => attempts - remembered;
+  double get recallRate => attempts == 0 ? 0 : remembered / attempts;
 }
 
 final reviewStatisticsProvider = FutureProvider<ReviewStatistics>((ref) async {
@@ -75,15 +116,45 @@ final reviewStatisticsProvider = FutureProvider<ReviewStatistics>((ref) async {
   final history = results[2] as List<ReviewAttempt>;
   final now = DateTime.now();
 
-  final missedCounts = <String, int>{};
-  for (final attempt in history.where((attempt) => !attempt.remembered)) {
-    missedCounts.update(attempt.word, (count) => count + 1, ifAbsent: () => 1);
-  }
-  final frequentlyMissed = missedCounts.entries.toList()
-    ..sort((a, b) {
-      final countComparison = b.value.compareTo(a.value);
-      return countComparison != 0 ? countComparison : a.key.compareTo(b.key);
-    });
+  final mastery = words
+      .map((word) {
+        final wordHistory = history
+            .where((attempt) => attempt.word == word.word)
+            .toList(growable: false);
+        final remembered = wordHistory
+            .where((attempt) => attempt.remembered)
+            .length;
+        final attempts = wordHistory.length;
+        final recallRate = attempts == 0 ? 0.0 : remembered / attempts;
+        final recentMisses =
+            attempts >= 2 &&
+            wordHistory.take(2).every((attempt) => !attempt.remembered);
+
+        final level = switch (attempts) {
+          < 2 => MasteryLevel.newWord,
+          _ when recallRate < 0.5 || recentMisses => MasteryLevel.needsPractice,
+          _ when attempts >= 3 && recallRate >= 0.8 && word.reviewCount >= 2 =>
+            MasteryLevel.strong,
+          _ => MasteryLevel.learning,
+        };
+
+        // Bayesian smoothing prevents one lucky review from outranking words
+        // remembered reliably across several attempts.
+        final smoothedRecall = (remembered + 1) / (attempts + 2);
+        final confidence = (attempts / 5).clamp(0.0, 1.0);
+        final streakBonus = (word.reviewCount / 5).clamp(0.0, 1.0);
+        final strengthScore =
+            (smoothedRecall * 0.65) + (confidence * 0.2) + (streakBonus * 0.15);
+
+        return WordMastery(
+          word: word,
+          history: wordHistory,
+          remembered: remembered,
+          level: level,
+          strengthScore: strengthScore,
+        );
+      })
+      .toList(growable: false);
 
   final upcoming =
       words
@@ -101,7 +172,7 @@ final reviewStatisticsProvider = FutureProvider<ReviewStatistics>((ref) async {
     rememberedReviews: history.where((attempt) => attempt.remembered).length,
     currentStreak: _calculateReviewStreak(history, now),
     upcomingWords: upcoming.take(5).toList(growable: false),
-    frequentlyMissedWords: frequentlyMissed.take(5).toList(growable: false),
+    wordMastery: mastery,
   );
 });
 
