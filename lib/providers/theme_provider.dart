@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/constants.dart';
+import '../core/theme.dart';
 
 class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   ThemeModeNotifier() : super(ThemeMode.system) {
@@ -28,3 +29,27 @@ final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>((
 ) {
   return ThemeModeNotifier();
 });
+
+class ThemePaletteNotifier extends StateNotifier<AppPalette> {
+  ThemePaletteNotifier() : super(AppPalette.classicInk) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    final saved = await SharedPreferencesAsync().getString(themePaletteKey);
+    state = AppPalette.values.firstWhere(
+      (palette) => palette.name == saved,
+      orElse: () => AppPalette.classicInk,
+    );
+  }
+
+  Future<void> setPalette(AppPalette palette) async {
+    state = palette;
+    await SharedPreferencesAsync().setString(themePaletteKey, palette.name);
+  }
+}
+
+final themePaletteProvider =
+    StateNotifierProvider<ThemePaletteNotifier, AppPalette>((ref) {
+      return ThemePaletteNotifier();
+    });

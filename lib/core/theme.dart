@@ -1,26 +1,96 @@
 import 'package:flutter/material.dart';
 
-ThemeData buildWordBucketTheme() {
-  return _buildTheme(Brightness.light);
+enum AppPalette {
+  classicInk,
+  forestJournal,
+  sepiaLibrary,
+  plumNotebook,
+  midnightBlue,
 }
 
-ThemeData buildWordBucketDarkTheme() {
-  return _buildTheme(Brightness.dark);
+extension AppPaletteDetails on AppPalette {
+  String get label => switch (this) {
+    AppPalette.classicInk => 'Classic Ink',
+    AppPalette.forestJournal => 'Forest Journal',
+    AppPalette.sepiaLibrary => 'Sepia Library',
+    AppPalette.plumNotebook => 'Plum Notebook',
+    AppPalette.midnightBlue => 'Midnight Blue',
+  };
+
+  Color get seed => switch (this) {
+    AppPalette.classicInk => const Color(0xFF203A43),
+    AppPalette.forestJournal => const Color(0xFF315B45),
+    AppPalette.sepiaLibrary => const Color(0xFF6B4932),
+    AppPalette.plumNotebook => const Color(0xFF65445F),
+    AppPalette.midnightBlue => const Color(0xFF354B6B),
+  };
+
+  Color get accent => switch (this) {
+    AppPalette.classicInk => const Color(0xFFF4C95D),
+    AppPalette.forestJournal => const Color(0xFFC79A45),
+    AppPalette.sepiaLibrary => const Color(0xFFB7793F),
+    AppPalette.plumNotebook => const Color(0xFFD09A5B),
+    AppPalette.midnightBlue => const Color(0xFF8FAED1),
+  };
+
+  Color get lightPaper => switch (this) {
+    AppPalette.classicInk => const Color(0xFFFFFBF3),
+    AppPalette.forestJournal => const Color(0xFFFBF8ED),
+    AppPalette.sepiaLibrary => const Color(0xFFFFF5DF),
+    AppPalette.plumNotebook => const Color(0xFFFFF7FA),
+    AppPalette.midnightBlue => const Color(0xFFF6F8FC),
+  };
+
+  Color get darkPaper => switch (this) {
+    AppPalette.classicInk => const Color(0xFF111A1D),
+    AppPalette.forestJournal => const Color(0xFF121C17),
+    AppPalette.sepiaLibrary => const Color(0xFF211813),
+    AppPalette.plumNotebook => const Color(0xFF20171F),
+    AppPalette.midnightBlue => const Color(0xFF111821),
+  };
 }
 
-ThemeData _buildTheme(Brightness brightness) {
-  const ink = Color(0xFF203A43);
+ThemeData buildWordBucketTheme({AppPalette palette = AppPalette.classicInk}) {
+  return _buildTheme(Brightness.light, palette);
+}
+
+ThemeData buildWordBucketDarkTheme({
+  AppPalette palette = AppPalette.classicInk,
+}) {
+  return _buildTheme(Brightness.dark, palette);
+}
+
+ThemeData _buildTheme(Brightness brightness, AppPalette palette) {
   final dark = brightness == Brightness.dark;
-  final scheme = ColorScheme.fromSeed(
-    seedColor: ink,
+  final paper = dark ? palette.darkPaper : palette.lightPaper;
+  final baseScheme = ColorScheme.fromSeed(
+    seedColor: palette.seed,
     brightness: brightness,
-    surface: dark ? const Color(0xFF111A1D) : const Color(0xFFFFFBF3),
+    surface: paper,
+  );
+  final scheme = baseScheme.copyWith(
+    tertiary: palette.accent,
+    onTertiary:
+        ThemeData.estimateBrightnessForColor(palette.accent) == Brightness.dark
+        ? Colors.white
+        : Colors.black,
+    tertiaryContainer: Color.alphaBlend(
+      palette.accent.withValues(alpha: dark ? 0.28 : 0.24),
+      paper,
+    ),
+    onTertiaryContainer: baseScheme.onSurface,
+  );
+  final raisedSurface = Color.alphaBlend(
+    dark
+        ? scheme.primary.withValues(alpha: 0.08)
+        : Colors.white.withValues(alpha: 0.72),
+    paper,
   );
 
   return ThemeData(
     colorScheme: scheme,
     useMaterial3: true,
-    scaffoldBackgroundColor: scheme.surface,
+    scaffoldBackgroundColor: paper,
     fontFamily: 'sans-serif',
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
@@ -28,9 +98,7 @@ ThemeData _buildTheme(Brightness brightness) {
     ),
     cardTheme: CardThemeData(
       elevation: 0,
-      color: dark
-          ? const Color(0xFF192529)
-          : Colors.white.withValues(alpha: 0.78),
+      color: raisedSurface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(color: scheme.outlineVariant),
@@ -38,7 +106,7 @@ ThemeData _buildTheme(Brightness brightness) {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: dark ? const Color(0xFF192529) : Colors.white,
+      fillColor: raisedSurface,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(18),
         borderSide: BorderSide(color: scheme.outlineVariant),
@@ -49,12 +117,15 @@ ThemeData _buildTheme(Brightness brightness) {
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: dark ? const Color(0xFF152024) : const Color(0xFFFFFDF8),
+      backgroundColor: Color.alphaBlend(
+        scheme.primary.withValues(alpha: dark ? 0.06 : 0.025),
+        paper,
+      ),
       indicatorColor: scheme.primaryContainer,
       elevation: 0,
     ),
     bottomSheetTheme: BottomSheetThemeData(
-      backgroundColor: scheme.surface,
+      backgroundColor: paper,
       surfaceTintColor: Colors.transparent,
     ),
   );

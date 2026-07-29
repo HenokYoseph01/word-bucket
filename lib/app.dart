@@ -164,12 +164,13 @@ class _WordBucketAppState extends ConsumerState<WordBucketApp> {
   @override
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
+    final palette = ref.watch(themePaletteProvider);
     return MaterialApp(
       navigatorKey: navigatorKey,
       title: 'WordBucket',
       debugShowCheckedModeBanner: false,
-      theme: buildWordBucketTheme(),
-      darkTheme: buildWordBucketDarkTheme(),
+      theme: buildWordBucketTheme(palette: palette),
+      darkTheme: buildWordBucketDarkTheme(palette: palette),
       themeMode: themeMode,
       color: Colors.transparent,
       home: widget.bucketifyMode
