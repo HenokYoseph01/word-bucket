@@ -329,30 +329,44 @@ int _calculateReviewStreak(List<ReviewAttempt> history, DateTime now) {
 class LookupState {
   const LookupState({
     this.isLoading = false,
+    this.isRetrying = false,
     this.result,
     this.error,
+    this.canRetry = false,
     this.existingWord,
   });
 
   final bool isLoading;
+  final bool isRetrying;
   final WordModel? result;
   final String? error;
+  final bool canRetry;
   final SavedWord? existingWord;
 }
 
 class WordNotifier extends StateNotifier<LookupState> {
-  WordNotifier(this._dictionary, this._database, this._homeWidget)
-    : super(const LookupState());
+  WordNotifier(
+    this._dictionary,
+    this._database,
+    this._homeWidget, {
+    this._retryDelay = const Duration(seconds: 5),
+  }) : super(const LookupState());
 
   final DictionaryService _dictionary;
   final AppDatabase _database;
   final HomeWidgetService _homeWidget;
+  final Duration _retryDelay;
+  int _lookupGeneration = 0;
+  String? _lastLookup;
 
   Future<void> lookUp(String text) async {
+    final request = ++_lookupGeneration;
+    final normalizedWord = text.trim().toLowerCase();
+    _lastLookup = normalizedWord;
     state = const LookupState(isLoading: true);
     try {
-      final normalizedWord = text.trim().toLowerCase();
       final existingWord = await _database.getWord(normalizedWord);
+      if (request != _lookupGeneration) return;
       if (existingWord != null) {
         state = LookupState(
           result: existingWord.toModel(),
@@ -360,11 +374,48 @@ class WordNotifier extends StateNotifier<LookupState> {
         );
         return;
       }
-      final result = await _dictionary.define(text);
-      state = LookupState(result: result);
+
+      for (var attempt = 0; attempt < 2; attempt++) {
+        try {
+          final result = await _dictionary.define(normalizedWord);
+          if (request == _lookupGeneration) {
+            state = LookupState(result: result);
+          }
+          return;
+        } on DictionaryException catch (error) {
+          if (request != _lookupGeneration) return;
+          final shouldRetry = error.isRetryable && attempt == 0;
+          if (!shouldRetry) {
+            state = LookupState(
+              error: error.message,
+              canRetry: error.isRetryable,
+            );
+            return;
+          }
+
+          state = const LookupState(isLoading: true, isRetrying: true);
+          await Future<void>.delayed(_retryDelay);
+          if (request != _lookupGeneration) return;
+        }
+      }
     } on DictionaryException catch (error) {
-      state = LookupState(error: error.message);
+      if (request == _lookupGeneration) {
+        state = LookupState(error: error.message, canRetry: error.isRetryable);
+      }
+    } catch (_) {
+      if (request == _lookupGeneration) {
+        state = const LookupState(
+          error: 'Something interrupted the lookup. Please try again.',
+          canRetry: true,
+        );
+      }
     }
+  }
+
+  Future<void> retry() async {
+    final word = _lastLookup;
+    if (word == null || word.isEmpty) return;
+    await lookUp(word);
   }
 
   Future<WordModel?> saveCurrentWord() async {
@@ -391,6 +442,8 @@ class WordNotifier extends StateNotifier<LookupState> {
   }
 
   void clear() {
+    _lookupGeneration++;
+    _lastLookup = null;
     state = const LookupState();
   }
 }

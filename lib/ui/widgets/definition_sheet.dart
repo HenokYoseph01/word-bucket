@@ -55,9 +55,9 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 280),
                 child: lookup.isLoading
-                    ? _buildLoading(context)
+                    ? _buildLoading(context, lookup.isRetrying)
                     : lookup.error != null
-                    ? _buildError(context, lookup.error!)
+                    ? _buildError(context, lookup.error!, lookup.canRetry)
                     : lookup.result != null
                     ? _buildDefinition(context)
                     : const SizedBox.shrink(),
@@ -69,7 +69,7 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
     );
   }
 
-  Widget _buildLoading(BuildContext context) {
+  Widget _buildLoading(BuildContext context, bool isRetrying) {
     return Padding(
       key: const ValueKey('definition-loading'),
       padding: const EdgeInsets.symmetric(vertical: 36),
@@ -90,14 +90,16 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
             ),
             const SizedBox(height: 20),
             Text(
-              'Finding that word…',
+              isRetrying ? 'Rebucketifying…' : 'Bucketifying…',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 6),
             Text(
-              'Looking through the dictionary',
+              isRetrying
+                  ? 'Giving the dictionary a quiet moment'
+                  : 'Leafing through the dictionary',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -108,7 +110,7 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
     );
   }
 
-  Widget _buildError(BuildContext context, String error) {
+  Widget _buildError(BuildContext context, String error, bool canRetry) {
     final colors = Theme.of(context).colorScheme;
     return Column(
       key: const ValueKey('definition-error'),
@@ -139,6 +141,17 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
           ),
         ),
         const SizedBox(height: 24),
+        if (canRetry) ...[
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => ref.read(wordNotifierProvider.notifier).retry(),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Try again'),
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
