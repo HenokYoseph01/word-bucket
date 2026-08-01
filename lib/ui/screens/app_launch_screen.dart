@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'bucket_screen.dart';
+import 'walkthrough_screen.dart';
+
+const walkthroughSeenKey = 'walkthrough_seen';
 
 class AppLaunchScreen extends StatefulWidget {
   const AppLaunchScreen({super.key});
@@ -43,9 +47,19 @@ class _AppLaunchScreenState extends State<AppLaunchScreen>
             curve: const Interval(0.56, 1, curve: Curves.easeOutCubic),
           ),
         );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _controller.forward();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _start());
+  }
+
+  Future<void> _start() async {
+    await _controller.forward();
+    final preferences = SharedPreferencesAsync();
+    final seen = await preferences.getBool(walkthroughSeenKey) ?? false;
+    if (!mounted || seen) return;
+
+    await Navigator.of(
+      context,
+    ).push<void>(MaterialPageRoute(builder: (_) => const WalkthroughScreen()));
+    await preferences.setBool(walkthroughSeenKey, true);
   }
 
   @override

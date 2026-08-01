@@ -9,6 +9,7 @@ import '../../providers/word_provider.dart';
 import 'review_screen.dart';
 import 'settings_screen.dart';
 import 'statistics_screen.dart';
+import 'walkthrough_screen.dart';
 import '../widgets/definition_sheet.dart';
 import '../widgets/word_card.dart';
 
@@ -175,6 +176,12 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
             ],
           ),
         ),
+        IconButton(
+          tooltip: 'How to use WordBucket',
+          onPressed: _openWalkthrough,
+          icon: const Icon(Icons.help_outline_rounded),
+        ),
+        const SizedBox(width: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
@@ -191,6 +198,12 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
         ),
       ],
     );
+  }
+
+  void _openWalkthrough() {
+    Navigator.of(
+      context,
+    ).push<void>(MaterialPageRoute(builder: (_) => const WalkthroughScreen()));
   }
 
   Widget _buildProgressStrip(ReviewStatistics statistics) {

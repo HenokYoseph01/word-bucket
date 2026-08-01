@@ -5,6 +5,7 @@ import '../../background/review_worker.dart';
 import '../../core/theme.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/word_provider.dart';
+import 'walkthrough_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -189,6 +190,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       },
                     ),
                   ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 28),
+            const _SectionLabel(
+              icon: Icons.help_outline_rounded,
+              title: 'Help',
+              subtitle: 'A quick refresher whenever you need it.',
+            ),
+            const SizedBox(height: 10),
+            Card(
+              clipBehavior: Clip.antiAlias,
+              child: ListTile(
+                leading: const Icon(Icons.auto_stories_rounded),
+                title: const Text('How to use WordBucket'),
+                subtitle: const Text('Replay the four-step introduction.'),
+                trailing: const Icon(Icons.arrow_forward_rounded),
+                onTap: () => Navigator.of(context).push<void>(
+                  MaterialPageRoute(builder: (_) => const WalkthroughScreen()),
                 ),
               ),
             ),
