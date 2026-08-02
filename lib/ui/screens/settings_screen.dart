@@ -287,7 +287,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ListTile(
                     leading: const Icon(Icons.auto_stories_rounded),
                     title: const Text('How to use WordBucket'),
-                    subtitle: const Text('Replay the four-step introduction.'),
+                    subtitle: const Text('Replay the six-step introduction.'),
                     trailing: const Icon(Icons.arrow_forward_rounded),
                     onTap: () => Navigator.of(context).push<void>(
                       MaterialPageRoute(

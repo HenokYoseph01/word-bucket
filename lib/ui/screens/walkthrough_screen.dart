@@ -19,7 +19,15 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
       description:
           'Press and hold an unfamiliar word in an article, book, or browser. Choose Bucketify from Android’s text menu.',
       note:
-          'If the app only offers Copy, copy the word and tap the Bucketify tile in Quick Settings.',
+          'Can’t see it? Tap More or ⋮ first. If the app only offers Copy, the next step has you covered.',
+    ),
+    _WalkthroughPage(
+      icon: Icons.dashboard_customize_rounded,
+      eyebrow: 'QUICK BUCKETIFY',
+      title: 'When an app only offers Copy',
+      description:
+          'Copy the selected word, pull down Quick Settings, and tap Bucketify. Its definition opens over what you were reading.',
+      note: 'Set it up once from Settings → Help → Add Quick Bucketify tile.',
     ),
     _WalkthroughPage(
       icon: Icons.search_rounded,
@@ -39,10 +47,19 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
     ),
     _WalkthroughPage(
       icon: Icons.widgets_rounded,
+      eyebrow: 'HOME-SCREEN WIDGET',
+      title: 'Keep a word within sight',
+      description:
+          'Press and hold an empty part of your home screen, open Widgets, find WordBucket, then drag the widget into place.',
+      note:
+          'The widget rotates through saved words. Tap it to open WordBucket, or refresh it when you have more than one word.',
+    ),
+    _WalkthroughPage(
+      icon: Icons.notifications_none_rounded,
       eyebrow: 'GENTLE REMINDERS',
       title: 'Let words find you again',
       description:
-          'Optional reminders and the home-screen widget bring saved words back without demanding your attention.',
+          'Optional reminders bring due words back at useful moments without demanding your attention.',
       note: 'You can change reminders, themes, and palettes in Settings.',
     ),
   ];
