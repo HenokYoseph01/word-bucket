@@ -18,7 +18,8 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
       title: 'Highlight, then Bucketify',
       description:
           'Press and hold an unfamiliar word in an article, book, or browser. Choose Bucketify from Android’s text menu.',
-      note: 'Can’t see it? Tap More or ⋮, then choose Bucketify.',
+      note:
+          'If the app only offers Copy, copy the word and tap the Bucketify tile in Quick Settings.',
     ),
     _WalkthroughPage(
       icon: Icons.search_rounded,

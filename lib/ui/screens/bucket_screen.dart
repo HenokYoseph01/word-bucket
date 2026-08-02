@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/database/database.dart';
@@ -82,6 +83,33 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('“$savedWord” saved to your bucket.')),
     );
+  }
+
+  Future<void> _pasteAndLookUp() async {
+    final clipboard = await Clipboard.getData(Clipboard.kTextPlain);
+    if (!mounted) return;
+    final copiedText = clipboard?.text?.trim();
+    if (copiedText == null || copiedText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Copy a word first, then try again.')),
+      );
+      return;
+    }
+
+    final firstPart = copiedText.split(RegExp(r'\s+')).first;
+    final word = firstPart.replaceAll(
+      RegExp(r"^[^A-Za-z'-]+|[^A-Za-z'-]+$"),
+      '',
+    );
+    if (word.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('The clipboard does not contain a word.')),
+      );
+      return;
+    }
+
+    _controller.text = word;
+    await _lookUpWord();
   }
 
   @override
@@ -284,10 +312,20 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
         labelText: 'Look up a word',
         hintText: 'Try “ephemeral”',
         prefixIcon: const Icon(Icons.search),
-        suffixIcon: IconButton(
-          tooltip: 'Search',
-          onPressed: _lookUpWord,
-          icon: const Icon(Icons.arrow_forward),
+        suffixIcon: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: 'Paste copied word',
+              onPressed: _pasteAndLookUp,
+              icon: const Icon(Icons.content_paste_rounded),
+            ),
+            IconButton(
+              tooltip: 'Search',
+              onPressed: _lookUpWord,
+              icon: const Icon(Icons.arrow_forward),
+            ),
+          ],
         ),
         border: const OutlineInputBorder(),
       ),

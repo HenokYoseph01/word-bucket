@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../background/review_worker.dart';
+import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/word_provider.dart';
@@ -15,10 +17,13 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  static const _quickTileChannel = MethodChannel(quickTileChannelName);
+
   bool _daily = false;
   bool _streak = true;
   bool _loading = true;
   bool _updating = false;
+  bool _addingQuickTile = false;
 
   @override
   void initState() {
@@ -90,6 +95,46 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       );
     } finally {
       if (mounted) setState(() => _updating = false);
+    }
+  }
+
+  Future<void> _addQuickTile() async {
+    setState(() => _addingQuickTile = true);
+    try {
+      final outcome = await _quickTileChannel.invokeMethod<String>(
+        requestAddQuickTileMethod,
+      );
+      if (!mounted) return;
+      final message = switch (outcome) {
+        'added' => 'Bucketify was added to Quick Settings.',
+        'already_added' => 'Bucketify is already in Quick Settings.',
+        'not_added' => 'The tile was not added. You can try again anytime.',
+        'manual' =>
+          'Open Quick Settings, tap Edit, then drag Bucketify into your tiles.',
+        _ =>
+          'Could not add the tile automatically. Add it from Quick Settings.',
+      };
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
+    } on MissingPluginException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Quick Bucketify is available on Android.'),
+        ),
+      );
+    } on PlatformException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not add the tile automatically. Open Quick Settings, tap Edit, and add Bucketify.',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _addingQuickTile = false);
     }
   }
 
@@ -202,14 +247,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const SizedBox(height: 10),
             Card(
               clipBehavior: Clip.antiAlias,
-              child: ListTile(
-                leading: const Icon(Icons.auto_stories_rounded),
-                title: const Text('How to use WordBucket'),
-                subtitle: const Text('Replay the four-step introduction.'),
-                trailing: const Icon(Icons.arrow_forward_rounded),
-                onTap: () => Navigator.of(context).push<void>(
-                  MaterialPageRoute(builder: (_) => const WalkthroughScreen()),
-                ),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.auto_stories_rounded),
+                    title: const Text('How to use WordBucket'),
+                    subtitle: const Text('Replay the four-step introduction.'),
+                    trailing: const Icon(Icons.arrow_forward_rounded),
+                    onTap: () => Navigator.of(context).push<void>(
+                      MaterialPageRoute(
+                        builder: (_) => const WalkthroughScreen(),
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  ListTile(
+                    leading: const Icon(Icons.dashboard_customize_rounded),
+                    title: const Text('Add Quick Bucketify tile'),
+                    subtitle: const Text(
+                      'Copy a word, then define it from Quick Settings.',
+                    ),
+                    trailing: _addingQuickTile
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.add_rounded),
+                    onTap: _addingQuickTile ? null : _addQuickTile,
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 28),

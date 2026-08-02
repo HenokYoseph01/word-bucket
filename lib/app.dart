@@ -103,10 +103,16 @@ class _WordBucketAppState extends ConsumerState<WordBucketApp> {
 
   Future<void> _readInitialWord() async {
     try {
-      final word = await _intentChannel.invokeMethod<String>(
-        getInitialWordMethod,
-      );
-      if (word != null && word.isNotEmpty) await _openDefinition(word);
+      for (var attempt = 0; attempt < 4; attempt++) {
+        final word = await _intentChannel.invokeMethod<String>(
+          getInitialWordMethod,
+        );
+        if (word != null && word.isNotEmpty) {
+          await _openDefinition(word);
+          return;
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 200));
+      }
     } on MissingPluginException {
       // Expected when running on a non-Android platform.
     } on PlatformException {

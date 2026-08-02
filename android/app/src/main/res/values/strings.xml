@@ -3,4 +3,7 @@
     <string name="word_widget_name">WordBucket word</string>
     <string name="word_widget_description">Rotates through your saved vocabulary words</string>
     <string name="refresh_word">Show another word</string>
+    <string name="share_with_wordbucket">WordBucket</string>
+    <string name="quick_bucketify_tile">Bucketify</string>
+    <string name="copy_word_first">Copy a word first, then tap Bucketify again.</string>
 </resources>

@@ -2,6 +2,8 @@ const intentChannelName = 'wordbucket/intent';
 const defineWordMethod = 'defineWord';
 const getInitialWordMethod = 'getInitialWord';
 const finishBucketifyMethod = 'finishBucketify';
+const quickTileChannelName = 'wordbucket/quick_tile';
+const requestAddQuickTileMethod = 'requestAddQuickTile';
 
 const reviewTaskUniqueName = 'wordbucket.dailyReview';
 const reviewTaskName = 'wordReview';
