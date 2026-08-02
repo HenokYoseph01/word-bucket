@@ -7,6 +7,8 @@ enum AppPalette {
   plumNotebook,
   midnightBlue,
   monochromePaper,
+  rosePetal,
+  matchaHoney,
 }
 
 extension AppPaletteDetails on AppPalette {
@@ -17,6 +19,8 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.plumNotebook => 'Plum Notebook',
     AppPalette.midnightBlue => 'Midnight Blue',
     AppPalette.monochromePaper => 'Monochrome Paper',
+    AppPalette.rosePetal => 'Rose Petal',
+    AppPalette.matchaHoney => 'Matcha & Honey',
   };
 
   Color get seed => switch (this) {
@@ -26,6 +30,8 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.plumNotebook => const Color(0xFF65445F),
     AppPalette.midnightBlue => const Color(0xFF354B6B),
     AppPalette.monochromePaper => const Color(0xFF111111),
+    AppPalette.rosePetal => const Color(0xFFA75A7A),
+    AppPalette.matchaHoney => const Color(0xFF9CA764),
   };
 
   Color get accent => switch (this) {
@@ -35,6 +41,8 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.plumNotebook => const Color(0xFFD09A5B),
     AppPalette.midnightBlue => const Color(0xFF8FAED1),
     AppPalette.monochromePaper => const Color(0xFF777777),
+    AppPalette.rosePetal => const Color(0xFFE7A5B8),
+    AppPalette.matchaHoney => const Color(0xFFF1E8C7),
   };
 
   Color get lightPaper => switch (this) {
@@ -44,6 +52,8 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.plumNotebook => const Color(0xFFFFF7FA),
     AppPalette.midnightBlue => const Color(0xFFF6F8FC),
     AppPalette.monochromePaper => const Color(0xFFFFFFFF),
+    AppPalette.rosePetal => const Color(0xFFFFF5F8),
+    AppPalette.matchaHoney => const Color(0xFFFCFAEF),
   };
 
   Color get darkPaper => switch (this) {
@@ -53,6 +63,8 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.plumNotebook => const Color(0xFF20171F),
     AppPalette.midnightBlue => const Color(0xFF111821),
     AppPalette.monochromePaper => const Color(0xFF000000),
+    AppPalette.rosePetal => const Color(0xFF21151B),
+    AppPalette.matchaHoney => const Color(0xFF1B1D13),
   };
 }
 

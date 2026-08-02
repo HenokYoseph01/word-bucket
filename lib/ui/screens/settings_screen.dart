@@ -240,6 +240,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             const SizedBox(height: 28),
             const _SectionLabel(
+              icon: Icons.notifications_none_rounded,
+              title: 'Reminders',
+              subtitle: 'Choose how WordBucket gently brings words back.',
+            ),
+            const SizedBox(height: 10),
+            Card(
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
+                  _ReminderTile(
+                    icon: Icons.menu_book_rounded,
+                    title: 'Daily word reminder',
+                    description:
+                        'Receive one due word to keep vocabulary fresh.',
+                    value: _daily,
+                    enabled: !disabled,
+                    onChanged: (value) =>
+                        _setReminder(value: value, isStreak: false),
+                  ),
+                  const Divider(height: 1, indent: 76),
+                  _ReminderTile(
+                    icon: Icons.local_fire_department_rounded,
+                    title: 'Streak reminder',
+                    description:
+                        'Around 1 PM, only when an active streak needs attention.',
+                    value: _streak,
+                    enabled: !disabled,
+                    onChanged: (value) =>
+                        _setReminder(value: value, isStreak: true),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 28),
+            const _SectionLabel(
               icon: Icons.help_outline_rounded,
               title: 'Help',
               subtitle: 'A quick refresher whenever you need it.',
@@ -275,41 +310,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           )
                         : const Icon(Icons.add_rounded),
                     onTap: _addingQuickTile ? null : _addQuickTile,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 28),
-            const _SectionLabel(
-              icon: Icons.notifications_none_rounded,
-              title: 'Reminders',
-              subtitle: 'Choose how WordBucket gently brings words back.',
-            ),
-            const SizedBox(height: 10),
-            Card(
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                children: [
-                  _ReminderTile(
-                    icon: Icons.menu_book_rounded,
-                    title: 'Daily word reminder',
-                    description:
-                        'Receive one due word to keep vocabulary fresh.',
-                    value: _daily,
-                    enabled: !disabled,
-                    onChanged: (value) =>
-                        _setReminder(value: value, isStreak: false),
-                  ),
-                  const Divider(height: 1, indent: 76),
-                  _ReminderTile(
-                    icon: Icons.local_fire_department_rounded,
-                    title: 'Streak reminder',
-                    description:
-                        'Around 1 PM, only when an active streak needs attention.',
-                    value: _streak,
-                    enabled: !disabled,
-                    onChanged: (value) =>
-                        _setReminder(value: value, isStreak: true),
                   ),
                 ],
               ),

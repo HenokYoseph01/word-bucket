@@ -200,6 +200,16 @@ class WordWidgetProvider : AppWidgetProvider() {
             } else {
                 WidgetAppearance("#FFFFFF", "#D8D8D8", "#111111", "#555555", "#888888", "#333333", "#E8E8E8", "#111111")
             }
+            "rosePetal" -> if (dark) {
+                WidgetAppearance("#21151B", "#573947", "#FFF0F5", "#D9BEC8", "#A58B95", "#E7A5B8", "#53303F", "#FFE7EF")
+            } else {
+                WidgetAppearance("#FFF5F8", "#E9D5DC", "#7C3F59", "#765F68", "#9A858D", "#A75A7A", "#F4DDE5", "#7C3F59")
+            }
+            "matchaHoney" -> if (dark) {
+                WidgetAppearance("#1B1D13", "#4A4E32", "#F5F1DA", "#CFC9A9", "#96937C", "#F1E8C7", "#42472C", "#F5F1DA")
+            } else {
+                WidgetAppearance("#FCFAEF", "#DED9BC", "#56602E", "#6E705B", "#969584", "#7E883E", "#F1E8C7", "#56602E")
+            }
             else -> if (dark) {
                 WidgetAppearance("#111A1D", "#3F4B4F", "#F0F5F3", "#BCC8C6", "#899694", "#B5CCC7", "#314B4B", "#DCE8E3")
             } else {
