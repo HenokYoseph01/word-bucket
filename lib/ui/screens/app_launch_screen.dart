@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'bucket_screen.dart';
+import 'app_shell_screen.dart';
 import 'walkthrough_screen.dart';
 
 const walkthroughSeenKey = 'walkthrough_seen';
@@ -78,7 +78,7 @@ class _AppLaunchScreenState extends State<AppLaunchScreen>
           opacity: _pageOpacity,
           child: SlideTransition(
             position: _pageSlide,
-            child: const BucketScreen(),
+            child: const AppShellScreen(),
           ),
         ),
         IgnorePointer(

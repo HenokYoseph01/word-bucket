@@ -8,8 +8,6 @@ import '../../data/database/database.dart';
 import '../../data/database/word_dao.dart';
 import '../../providers/word_provider.dart';
 import 'review_screen.dart';
-import 'settings_screen.dart';
-import 'statistics_screen.dart';
 import 'walkthrough_screen.dart';
 import '../widgets/definition_sheet.dart';
 import '../widgets/word_card.dart';
@@ -120,25 +118,6 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     final statistics = ref.watch(reviewStatisticsProvider).valueOrNull;
 
     return Scaffold(
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: 0,
-        onDestinationSelected: _openNavigationDestination,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.bookmarks_outlined),
-            selectedIcon: Icon(Icons.bookmarks_rounded),
-            label: 'Bucket',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.insights_outlined),
-            label: 'Progress',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.tune_outlined),
-            label: 'Settings',
-          ),
-        ],
-      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -256,23 +235,6 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
         ],
       ),
     );
-  }
-
-  void _openNavigationDestination(int index) {
-    if (index == 1) {
-      _openStatistics();
-    } else if (index == 2) {
-      Navigator.of(
-        context,
-      ).push<void>(MaterialPageRoute(builder: (_) => const SettingsScreen()));
-    }
-  }
-
-  Future<void> _openStatistics() async {
-    await Navigator.of(
-      context,
-    ).push<void>(MaterialPageRoute(builder: (_) => const StatisticsScreen()));
-    ref.invalidate(reviewStatisticsProvider);
   }
 
   Widget _buildReviewBanner(List<SavedWord> dueWords) {
