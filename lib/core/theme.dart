@@ -80,16 +80,17 @@ ThemeData buildWordBucketDarkTheme({
 
 ThemeData _buildTheme(Brightness brightness, AppPalette palette) {
   final dark = brightness == Brightness.dark;
+  final monochrome = palette == AppPalette.monochromePaper;
   final paper = dark ? palette.darkPaper : palette.lightPaper;
   final baseScheme = ColorScheme.fromSeed(
     seedColor: palette.seed,
     brightness: brightness,
     surface: paper,
-    dynamicSchemeVariant: palette == AppPalette.monochromePaper
+    dynamicSchemeVariant: monochrome
         ? DynamicSchemeVariant.monochrome
         : DynamicSchemeVariant.tonalSpot,
   );
-  final scheme = baseScheme.copyWith(
+  var scheme = baseScheme.copyWith(
     tertiary: palette.accent,
     onTertiary:
         ThemeData.estimateBrightnessForColor(palette.accent) == Brightness.dark
@@ -101,6 +102,22 @@ ThemeData _buildTheme(Brightness brightness, AppPalette palette) {
     ),
     onTertiaryContainer: baseScheme.onSurface,
   );
+  if (monochrome) {
+    scheme = scheme.copyWith(
+      primary: dark ? Colors.white : Colors.black,
+      onPrimary: dark ? Colors.black : Colors.white,
+      primaryContainer: dark
+          ? const Color(0xFF2E2E2E)
+          : const Color(0xFFE2E2E2),
+      onPrimaryContainer: dark ? Colors.white : Colors.black,
+      secondary: dark ? const Color(0xFFD0D0D0) : const Color(0xFF333333),
+      onSecondary: dark ? Colors.black : Colors.white,
+      secondaryContainer: dark
+          ? const Color(0xFF333333)
+          : const Color(0xFFE2E2E2),
+      onSecondaryContainer: dark ? Colors.white : const Color(0xFF111111),
+    );
+  }
   final raisedSurface = Color.alphaBlend(
     dark
         ? scheme.primary.withValues(alpha: 0.08)
@@ -142,7 +159,24 @@ ThemeData _buildTheme(Brightness brightness, AppPalette palette) {
         scheme.primary.withValues(alpha: dark ? 0.06 : 0.025),
         paper,
       ),
-      indicatorColor: scheme.primaryContainer,
+      indicatorColor: monochrome ? scheme.primary : scheme.primaryContainer,
+      iconTheme: monochrome
+          ? WidgetStateProperty.resolveWith((states) {
+              final selected = states.contains(WidgetState.selected);
+              return IconThemeData(
+                color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
+              );
+            })
+          : null,
+      labelTextStyle: monochrome
+          ? WidgetStateProperty.resolveWith((states) {
+              final selected = states.contains(WidgetState.selected);
+              return TextStyle(
+                color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              );
+            })
+          : null,
       elevation: 0,
     ),
     bottomSheetTheme: BottomSheetThemeData(

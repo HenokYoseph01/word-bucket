@@ -27,7 +27,8 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
       title: 'When an app only offers Copy',
       description:
           'Copy the selected word, pull down Quick Settings, and tap Bucketify. Its definition opens over what you were reading.',
-      note: 'Set it up once from Settings → Help → Add Quick Bucketify tile.',
+      note:
+          'To add it manually, pull Quick Settings all the way down, tap Edit or the pencil, find Bucketify, and drag it into your active tiles.',
     ),
     _WalkthroughPage(
       icon: Icons.search_rounded,

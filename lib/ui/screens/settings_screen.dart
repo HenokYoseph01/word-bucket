@@ -460,7 +460,10 @@ class _PaletteOption extends StatelessWidget {
                   ),
                   const Spacer(),
                   if (selected)
-                    Icon(Icons.check_circle_rounded, color: colors.primary),
+                    Icon(
+                      Icons.check_circle_rounded,
+                      color: colors.onPrimaryContainer,
+                    ),
                 ],
               ),
               const SizedBox(height: 9),
@@ -468,7 +471,12 @@ class _PaletteOption extends StatelessWidget {
                 palette.label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w700),
+                style: TextStyle(
+                  color: selected
+                      ? colors.onPrimaryContainer
+                      : colors.onSurface,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),
