@@ -245,7 +245,7 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
         title: Text(
           '${dueWords.length} ${dueWords.length == 1 ? 'word is' : 'words are'} due',
         ),
-        subtitle: const Text('Practise your due words now'),
+        subtitle: const Text('Practice your due words now'),
         trailing: const Icon(Icons.arrow_forward_rounded),
         onTap: () => _openReviewQueue(dueWords),
       ),

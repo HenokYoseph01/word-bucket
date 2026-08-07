@@ -375,6 +375,7 @@ class WordNotifier extends StateNotifier<LookupState> {
         return;
       }
 
+      DictionaryException? primaryError;
       for (var attempt = 0; attempt < 2; attempt++) {
         try {
           final result = await _dictionary.define(normalizedWord);
@@ -386,16 +387,29 @@ class WordNotifier extends StateNotifier<LookupState> {
           if (request != _lookupGeneration) return;
           final shouldRetry = error.isRetryable && attempt == 0;
           if (!shouldRetry) {
-            state = LookupState(
-              error: error.message,
-              canRetry: error.isRetryable,
-            );
-            return;
+            primaryError = error;
+            break;
           }
 
           state = const LookupState(isLoading: true, isRetrying: true);
           await Future<void>.delayed(_retryDelay);
           if (request != _lookupGeneration) return;
+        }
+      }
+
+      if (primaryError != null) {
+        try {
+          final result = await _dictionary.defineFallback(normalizedWord);
+          if (request == _lookupGeneration) {
+            state = LookupState(result: result);
+          }
+        } on DictionaryException catch (fallbackError) {
+          if (request == _lookupGeneration) {
+            state = LookupState(
+              error: primaryError.message,
+              canRetry: primaryError.isRetryable || fallbackError.isRetryable,
+            );
+          }
         }
       }
     } on DictionaryException catch (error) {

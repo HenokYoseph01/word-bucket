@@ -57,18 +57,67 @@ void main() {
     expect(notifier.state.error, 'Not found');
     expect(notifier.state.canRetry, isTrue);
   });
+
+  test('uses the backup dictionary after both primary attempts fail', () async {
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+    final dictionary = _FakeDictionaryService(
+      [
+        const DictionaryException(
+          'Temporary failure',
+          kind: DictionaryFailure.temporary,
+        ),
+        const DictionaryException(
+          'Temporary failure',
+          kind: DictionaryFailure.temporary,
+        ),
+      ],
+      fallbackResponse: WordModel(
+        word: 'luminous',
+        partOfSpeech: 'adjective',
+        definition: 'Emitting light.',
+        savedAt: DateTime(2026, 8, 7),
+      ),
+    );
+    final notifier = WordNotifier(
+      dictionary,
+      database,
+      HomeWidgetService(),
+      retryDelay: Duration.zero,
+    );
+
+    await notifier.lookUp('luminous');
+
+    expect(dictionary.calls, 2);
+    expect(dictionary.fallbackCalls, 1);
+    expect(notifier.state.result?.definition, 'Emitting light.');
+    expect(notifier.state.error, isNull);
+  });
 }
 
 class _FakeDictionaryService extends DictionaryService {
-  _FakeDictionaryService(this.responses);
+  _FakeDictionaryService(this.responses, {this.fallbackResponse});
 
   final List<Object> responses;
+  final WordModel? fallbackResponse;
   int calls = 0;
+  int fallbackCalls = 0;
 
   @override
   Future<WordModel> define(String word) async {
     final response = responses[calls++];
     if (response is DictionaryException) throw response;
     return response as WordModel;
+  }
+
+  @override
+  Future<WordModel> defineFallback(String word) async {
+    fallbackCalls++;
+    final result = fallbackResponse;
+    if (result != null) return result;
+    throw const DictionaryException(
+      'Fallback not found',
+      kind: DictionaryFailure.notFound,
+    );
   }
 }

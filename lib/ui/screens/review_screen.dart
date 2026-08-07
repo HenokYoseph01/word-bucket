@@ -45,7 +45,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         Navigator.pop(
           context,
           'Review complete: $_rememberedCount remembered, '
-          '$_againCount to practise again.',
+          '$_againCount to practice again.',
         );
       }
     } finally {
