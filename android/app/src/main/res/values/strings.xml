@@ -6,4 +6,5 @@
     <string name="share_with_wordbucket">WordBucket</string>
     <string name="quick_bucketify_tile">Bucketify</string>
     <string name="copy_word_first">Copy a word first, then tap Bucketify again.</string>
+    <string name="word_saved">“%1$s” saved to your bucket.</string>
 </resources>

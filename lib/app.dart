@@ -149,7 +149,7 @@ class _WordBucketAppState extends ConsumerState<WordBucketApp> {
     if (!mounted) return;
     ref.read(wordNotifierProvider.notifier).clear();
     if (widget.bucketifyMode) {
-      await _finishBucketify();
+      await _finishBucketify(savedWord);
       return;
     }
     if (!context.mounted || savedWord == null) return;
@@ -159,9 +159,9 @@ class _WordBucketAppState extends ConsumerState<WordBucketApp> {
     );
   }
 
-  Future<void> _finishBucketify() async {
+  Future<void> _finishBucketify(String? savedWord) async {
     try {
-      await _intentChannel.invokeMethod<void>(finishBucketifyMethod);
+      await _intentChannel.invokeMethod<void>(finishBucketifyMethod, savedWord);
     } on PlatformException {
       // Android will also close the activity through its normal back behavior.
     }

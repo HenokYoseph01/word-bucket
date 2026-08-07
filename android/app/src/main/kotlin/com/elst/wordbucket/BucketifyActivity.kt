@@ -38,6 +38,14 @@ class BucketifyActivity : FlutterActivity() {
                         result.success(selectedWord)
                     }
                     "finishBucketify" -> {
+                        val savedWord = call.arguments as? String
+                        if (!savedWord.isNullOrBlank()) {
+                            Toast.makeText(
+                                this@BucketifyActivity,
+                                getString(R.string.word_saved, savedWord),
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        }
                         result.success(null)
                         finish()
                     }
