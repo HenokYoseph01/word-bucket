@@ -124,6 +124,10 @@ ThemeData _buildTheme(Brightness brightness, AppPalette palette) {
         : Colors.white.withValues(alpha: 0.72),
     paper,
   );
+  final snackBarSurface = Color.alphaBlend(
+    scheme.primary.withValues(alpha: dark ? 0.16 : 0.08),
+    raisedSurface,
+  );
 
   return ThemeData(
     colorScheme: scheme,
@@ -182,6 +186,26 @@ ThemeData _buildTheme(Brightness brightness, AppPalette palette) {
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: paper,
       surfaceTintColor: Colors.transparent,
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: snackBarSurface,
+      elevation: 6,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(
+          color: scheme.primary.withValues(alpha: dark ? 0.55 : 0.38),
+        ),
+      ),
+      insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      contentTextStyle: TextStyle(
+        color: scheme.onSurface,
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        height: 1.35,
+      ),
+      actionTextColor: scheme.primary,
+      disabledActionTextColor: scheme.onSurfaceVariant,
     ),
   );
 }
