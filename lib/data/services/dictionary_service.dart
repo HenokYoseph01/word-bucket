@@ -128,7 +128,7 @@ class DictionaryService {
           'sp': normalizedWord,
           'md': 'dpr',
           'ipa': 1,
-          'max': 1,
+          'max': 10,
         },
       );
       final entries = response.data;
@@ -139,7 +139,24 @@ class DictionaryService {
         );
       }
 
-      final entry = entries.first as Map<String, dynamic>;
+      final candidates = entries.whereType<Map<String, dynamic>>();
+      final entry = candidates.cast<Map<String, dynamic>?>().firstWhere((
+        candidate,
+      ) {
+        if (candidate == null) return false;
+        final definitions = candidate['defs'] as List<dynamic>?;
+        if (definitions == null || definitions.isEmpty) return false;
+        final tags = (candidate['tags'] as List<dynamic>?)?.whereType<String>();
+        // Datamuse uses uppercase POS tags for proper names. Those results
+        // often describe albums, films, and songs rather than vocabulary.
+        return tags?.any(const {'n', 'v', 'adj', 'adv'}.contains) ?? false;
+      }, orElse: () => null);
+      if (entry == null) {
+        throw DictionaryException(
+          'No definition found for "$normalizedWord".',
+          kind: DictionaryFailure.notFound,
+        );
+      }
       final definitions = entry['defs'] as List<dynamic>?;
       if (definitions == null || definitions.isEmpty) {
         throw DictionaryException(
@@ -162,7 +179,9 @@ class DictionaryService {
       final phonetic = _readFallbackPhonetic(tags);
 
       return WordModel(
-        word: entry['word'] as String? ?? normalizedWord,
+        // Preserve what the user looked up when Datamuse supplies a base form
+        // (for example, "feeling" for "feelings").
+        word: normalizedWord,
         phonetic: phonetic,
         partOfSpeech: _expandPartOfSpeech(rawPartOfSpeech),
         definition: definition,
