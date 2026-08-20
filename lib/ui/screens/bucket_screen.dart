@@ -420,6 +420,10 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
                   },
                   onDeleteMeaning: (meaning) =>
                       _confirmAndRemoveMeaning(savedWord, meaning),
+                  onConfirmMeaningDismiss: (meaning) =>
+                      _confirmMeaningRemoval(savedWord, meaning),
+                  onMeaningDismissed: (meaning) =>
+                      _removeMeaning(savedWord, meaning),
                 ),
               );
             },
@@ -445,13 +449,25 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     SavedWord word,
     SavedMeaning meaning,
   ) async {
-    final confirmed = await _showRemovalConfirmation(
-      icon: Icons.delete_outline_rounded,
-      title: 'Remove this meaning?',
-      message: '“${meaning.definition}” will be removed from ${word.word}.',
-      actionLabel: 'Remove meaning',
-    );
-    if (confirmed != true || !mounted) return;
+    final confirmed = await _confirmMeaningRemoval(word, meaning);
+    if (!confirmed || !mounted) return;
+    await _removeMeaning(word, meaning);
+  }
+
+  Future<bool> _confirmMeaningRemoval(
+    SavedWord word,
+    SavedMeaning meaning,
+  ) async {
+    return await _showRemovalConfirmation(
+          icon: Icons.delete_outline_rounded,
+          title: 'Remove this meaning?',
+          message: '“${meaning.definition}” will be removed from ${word.word}.',
+          actionLabel: 'Remove meaning',
+        ) ??
+        false;
+  }
+
+  Future<void> _removeMeaning(SavedWord word, SavedMeaning meaning) async {
     final snapshot = await ref
         .read(wordNotifierProvider.notifier)
         .deleteMeaningWithUndo(word.word, meaning.id);
@@ -508,8 +524,9 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
       showDragHandle: true,
       builder: (sheetContext) {
         final colors = Theme.of(sheetContext).colorScheme;
+        final systemBottom = MediaQuery.viewPaddingOf(sheetContext).bottom;
         return Padding(
-          padding: const EdgeInsets.fromLTRB(22, 4, 22, 24),
+          padding: EdgeInsets.fromLTRB(22, 4, 22, systemBottom + 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

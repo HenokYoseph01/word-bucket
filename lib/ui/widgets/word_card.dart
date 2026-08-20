@@ -11,6 +11,8 @@ class WordCard extends StatefulWidget {
     this.onSave,
     this.onDeleteWord,
     this.onDeleteMeaning,
+    this.onConfirmMeaningDismiss,
+    this.onMeaningDismissed,
     super.key,
   });
 
@@ -19,6 +21,8 @@ class WordCard extends StatefulWidget {
   final VoidCallback? onSave;
   final VoidCallback? onDeleteWord;
   final ValueChanged<SavedMeaning>? onDeleteMeaning;
+  final Future<bool> Function(SavedMeaning)? onConfirmMeaningDismiss;
+  final ValueChanged<SavedMeaning>? onMeaningDismissed;
 
   @override
   State<WordCard> createState() => _WordCardState();
@@ -146,7 +150,7 @@ class _WordCardState extends State<WordCard>
   }
 
   Widget _meaning(BuildContext context, SavedMeaning meaning) {
-    return _meaningSurface(
+    final surface = _meaningSurface(
       context,
       partOfSpeech: meaning.partOfSpeech,
       definition: meaning.definition,
@@ -155,6 +159,30 @@ class _WordCardState extends State<WordCard>
       onDelete: widget.onDeleteMeaning == null
           ? null
           : () => widget.onDeleteMeaning!(meaning),
+    );
+    if (widget.meanings.length <= 1 ||
+        widget.onConfirmMeaningDismiss == null ||
+        widget.onMeaningDismissed == null) {
+      return surface;
+    }
+    return Dismissible(
+      key: ValueKey('meaning-${meaning.id}'),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (_) => widget.onConfirmMeaningDismiss!(meaning),
+      onDismissed: (_) => widget.onMeaningDismissed!(meaning),
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 22),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.error,
+          borderRadius: BorderRadius.circular(17),
+        ),
+        child: Icon(
+          Icons.delete_outline_rounded,
+          color: Theme.of(context).colorScheme.onError,
+        ),
+      ),
+      child: surface,
     );
   }
 
