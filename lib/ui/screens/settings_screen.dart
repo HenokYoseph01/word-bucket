@@ -162,9 +162,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       context: context,
       builder: (dialogContext) => AlertDialog(
         icon: const Icon(Icons.auto_stories_rounded),
-        title: const Text('Allow the reading bubble?'),
+        title: const Text('Ready to start reading?'),
         content: const Text(
-          'Android calls this “Display over other apps.” WordBucket uses it only to show a small draggable book while you read. Clipboard text is read only when you tap the bubble.',
+          'Add the little WordBucket book to your screen, then keep reading wherever you like. Copy a word and tap the book whenever curiosity strikes.',
         ),
         actions: [
           TextButton(
@@ -173,7 +173,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Open settings'),
+            child: const Text('Add the bubble'),
           ),
         ],
       ),
@@ -294,6 +294,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           children: [
             _buildHeader(context),
             const SizedBox(height: 26),
+            ..._buildReadingCompanionSection(),
+            const SizedBox(height: 28),
             const _SectionLabel(
               icon: Icons.palette_outlined,
               title: 'Appearance',
@@ -411,45 +413,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     enabled: !disabled,
                     onChanged: (value) =>
                         _setReminder(value: value, isStreak: true),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 28),
-            const _SectionLabel(
-              icon: Icons.auto_stories_rounded,
-              title: 'Reading Companion',
-              subtitle: 'Keep Bucketify nearby without leaving your book.',
-            ),
-            const SizedBox(height: 10),
-            Card(
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                children: [
-                  _ReminderTile(
-                    icon: Icons.bubble_chart_rounded,
-                    title: 'Start reading',
-                    description:
-                        'Show a draggable bubble. Copy a word and tap the bubble to define it.',
-                    value: _companionActive,
-                    enabled: !_companionUpdating,
-                    onChanged: _setReadingCompanion,
-                  ),
-                  const Divider(height: 1, indent: 76),
-                  const ListTile(
-                    leading: Icon(Icons.privacy_tip_outlined),
-                    title: Text('Private by design'),
-                    subtitle: Text(
-                      'The companion does not monitor everything you copy. It reads the clipboard only after you tap it.',
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 76),
-                  const ListTile(
-                    leading: Icon(Icons.open_with_rounded),
-                    title: Text('Move it or dismiss it'),
-                    subtitle: Text(
-                      'Drag it to either edge, or drag it onto the remove target at the bottom to stop.',
-                    ),
                   ),
                 ],
               ),
@@ -589,6 +552,47 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       ),
     );
   }
+
+  List<Widget> _buildReadingCompanionSection() => [
+    const _SectionLabel(
+      icon: Icons.auto_stories_rounded,
+      title: 'Reading Companion',
+      subtitle: 'Keep Bucketify nearby without leaving your book.',
+    ),
+    const SizedBox(height: 10),
+    Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          _ReminderTile(
+            icon: Icons.bubble_chart_rounded,
+            title: 'Start reading',
+            description:
+                'Show a draggable bubble. Copy a word and tap the bubble to define it.',
+            value: _companionActive,
+            enabled: !_companionUpdating,
+            onChanged: _setReadingCompanion,
+          ),
+          const Divider(height: 1, indent: 76),
+          const ListTile(
+            leading: Icon(Icons.privacy_tip_outlined),
+            title: Text('Yours until you tap'),
+            subtitle: Text(
+              'The bubble waits quietly and checks your copied word only when you ask it to.',
+            ),
+          ),
+          const Divider(height: 1, indent: 76),
+          const ListTile(
+            leading: Icon(Icons.open_with_rounded),
+            title: Text('Move it or dismiss it'),
+            subtitle: Text(
+              'Drag it to either edge, or drag it onto the remove target at the bottom to stop.',
+            ),
+          ),
+        ],
+      ),
+    ),
+  ];
 }
 
 class _PaletteOption extends StatelessWidget {
