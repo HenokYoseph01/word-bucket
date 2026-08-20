@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:wordbucket/data/database/database.dart';
 import 'package:wordbucket/data/database/word_dao.dart';
 import 'package:wordbucket/data/models/word_model.dart';
+import 'package:wordbucket/data/models/review_group.dart';
 
 void main() {
   test('migrates a version-2 word into its first saved meaning', () async {
@@ -95,6 +96,10 @@ void main() {
     );
     final twoMeanings = await database.getMeanings('ephemeral');
     expect(twoMeanings, hasLength(2));
+    final groups = await buildReviewGroups(database, [twoMeanings.first]);
+    expect(groups, hasLength(1));
+    expect(groups.single.word, 'ephemeral');
+    expect(groups.single.meanings, hasLength(2));
     final meaningSnapshot = await database.deleteMeaningWithSnapshot(
       'ephemeral',
       twoMeanings.first.id,

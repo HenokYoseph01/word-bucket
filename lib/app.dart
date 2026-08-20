@@ -6,6 +6,7 @@ import 'core/constants.dart';
 import 'core/theme.dart';
 import 'data/database/database.dart';
 import 'data/database/word_dao.dart';
+import 'data/models/review_group.dart';
 import 'providers/word_provider.dart';
 import 'providers/theme_provider.dart';
 import 'ui/screens/app_launch_screen.dart';
@@ -81,14 +82,20 @@ class _WordBucketAppState extends ConsumerState<WordBucketApp> {
 
     final dueWords = await database.getMeaningsDueForReview();
     if (!mounted || !context.mounted) return;
-    final reviewWords = [
+    final reviewMeanings = [
       meaning,
       ...dueWords.where((dueWord) => dueWord.id != meaning!.id),
     ];
+    final groups = await buildReviewGroups(
+      database,
+      reviewMeanings,
+      preferredMeaningId: meaning.id,
+    );
+    if (!mounted || !context.mounted || groups.isEmpty) return;
 
     _isReviewScreenOpen = true;
     final message = await Navigator.of(context).push<String>(
-      MaterialPageRoute(builder: (_) => ReviewScreen(words: reviewWords)),
+      MaterialPageRoute(builder: (_) => ReviewScreen(groups: groups)),
     );
     _isReviewScreenOpen = false;
     ref.invalidate(dueWordsProvider);

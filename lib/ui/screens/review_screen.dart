@@ -2,62 +2,77 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/database/database.dart';
+import '../../data/models/review_group.dart';
 import '../../providers/word_provider.dart';
 import '../widgets/part_of_speech_badge.dart';
 
 class ReviewScreen extends ConsumerStatefulWidget {
-  const ReviewScreen({required this.words, super.key});
+  const ReviewScreen({required this.groups, super.key});
 
-  final List<SavedMeaning> words;
+  final List<ReviewGroup> groups;
 
   @override
   ConsumerState<ReviewScreen> createState() => _ReviewScreenState();
 }
 
 class _ReviewScreenState extends ConsumerState<ReviewScreen> {
-  int _currentIndex = 0;
+  int _groupIndex = 0;
   int _rememberedCount = 0;
   int _againCount = 0;
-  bool _isSaving = false;
-  bool _isAnswerRevealed = false;
+  bool _revealed = false;
+  final Map<int, bool> _answers = {};
+  final Set<int> _saving = {};
 
-  Future<void> _recordAnswer(bool remembered) async {
-    setState(() => _isSaving = true);
+  ReviewGroup get _group => widget.groups[_groupIndex];
+  bool get _groupComplete =>
+      _group.meanings.every((meaning) => _answers.containsKey(meaning.id));
+
+  Future<void> _recordAnswer(SavedMeaning meaning, bool remembered) async {
+    if (_saving.contains(meaning.id) || _answers.containsKey(meaning.id)) {
+      return;
+    }
+    setState(() => _saving.add(meaning.id));
     try {
       await ref
           .read(wordNotifierProvider.notifier)
-          .recordReview(widget.words[_currentIndex], remembered: remembered);
+          .recordReview(meaning, remembered: remembered);
       if (!mounted) return;
-
-      if (remembered) {
-        _rememberedCount++;
-      } else {
-        _againCount++;
-      }
-
-      if (_currentIndex < widget.words.length - 1) {
-        setState(() {
-          _currentIndex++;
-          _isSaving = false;
-          _isAnswerRevealed = false;
-        });
-      } else {
-        Navigator.pop(
-          context,
-          'Review complete: $_rememberedCount remembered, '
-          '$_againCount to practice again.',
-        );
-      }
+      setState(() {
+        _saving.remove(meaning.id);
+        _answers[meaning.id] = remembered;
+        if (remembered) {
+          _rememberedCount++;
+        } else {
+          _againCount++;
+        }
+      });
     } finally {
-      if (mounted && _isSaving) setState(() => _isSaving = false);
+      if (mounted && _saving.contains(meaning.id)) {
+        setState(() => _saving.remove(meaning.id));
+      }
     }
+  }
+
+  void _continue() {
+    if (!_groupComplete) return;
+    if (_groupIndex < widget.groups.length - 1) {
+      setState(() {
+        _groupIndex++;
+        _revealed = false;
+      });
+      return;
+    }
+    Navigator.pop(
+      context,
+      'Review complete: $_rememberedCount remembered, '
+      '$_againCount to practice again.',
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final word = widget.words[_currentIndex];
-    final currentNumber = _currentIndex + 1;
-
+    final currentNumber = _groupIndex + 1;
+    final colors = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('Review session'), centerTitle: true),
       body: SafeArea(
@@ -67,16 +82,16 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             Row(
               children: [
                 Text(
-                  'MEANING $currentNumber OF ${widget.words.length}',
+                  'WORD $currentNumber OF ${widget.groups.length}',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
+                    color: colors.primary,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1,
                   ),
                 ),
                 const Spacer(),
                 Text(
-                  '${((currentNumber / widget.words.length) * 100).round()}%',
+                  '${((currentNumber / widget.groups.length) * 100).round()}%',
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
               ],
@@ -85,24 +100,20 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(999),
               child: LinearProgressIndicator(
-                value: currentNumber / widget.words.length,
+                value: currentNumber / widget.groups.length,
                 minHeight: 8,
-                backgroundColor: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest,
+                backgroundColor: colors.surfaceContainerHighest,
               ),
             ),
             const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
+                color: colors.primary,
                 borderRadius: BorderRadius.circular(26),
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.16),
+                    color: colors.primary.withValues(alpha: 0.16),
                     blurRadius: 24,
                     offset: const Offset(0, 10),
                   ),
@@ -112,59 +123,47 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 children: [
                   Icon(
                     Icons.auto_stories_rounded,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onPrimary.withValues(alpha: 0.72),
+                    color: colors.onPrimary.withValues(alpha: 0.72),
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    word.word,
+                    _group.word,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimary,
+                      color: colors.onPrimary,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.8,
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+                  Text(
+                    '${_group.meanings.length} saved '
+                    '${_group.meanings.length == 1 ? 'meaning' : 'meanings'}',
+                    style: TextStyle(
+                      color: colors.onPrimary.withValues(alpha: 0.72),
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 18),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 280),
-                transitionBuilder: (child, animation) => FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween(
-                      begin: const Offset(0, 0.04),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
-                  ),
-                ),
-                child: _isAnswerRevealed
-                    ? _buildRevealedAnswer(context, word)
-                    : _buildRecallPrompt(context, word),
-              ),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 280),
+              child: _revealed
+                  ? _revealedMeanings(context)
+                  : _recallPrompt(context),
             ),
-            if (_isSaving) ...[
-              const SizedBox(height: 16),
-              const Center(child: CircularProgressIndicator()),
-            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildRecallPrompt(BuildContext context, SavedMeaning meaning) {
+  Widget _recallPrompt(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Container(
-      key: const ValueKey('recall-prompt'),
-      width: double.infinity,
+      key: ValueKey('recall-${_group.word}'),
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         color: colors.secondaryContainer.withValues(alpha: 0.48),
@@ -179,17 +178,19 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Can you recall this meaning?',
+            _group.meanings.length == 1
+                ? 'What does this word mean?'
+                : 'How many meanings can you recall?',
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 6),
-          PartOfSpeechBadge(label: meaning.partOfSpeech),
-          const SizedBox(height: 8),
+          const SizedBox(height: 7),
           Text(
-            'Take a moment to recall it before checking.',
+            _group.meanings.length == 1
+                ? 'Take a moment before checking the definition.'
+                : 'Try to remember all ${_group.meanings.length} meanings before checking.',
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
@@ -199,9 +200,13 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: () => setState(() => _isAnswerRevealed = true),
+              onPressed: () => setState(() => _revealed = true),
               icon: const Icon(Icons.visibility_outlined),
-              label: const Text('Reveal definition'),
+              label: Text(
+                _group.meanings.length == 1
+                    ? 'Reveal definition'
+                    : 'Reveal meanings',
+              ),
             ),
           ),
         ],
@@ -209,126 +214,144 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     );
   }
 
-  Widget _buildRevealedAnswer(BuildContext context, SavedMeaning word) {
-    final colors = Theme.of(context).colorScheme;
+  Widget _revealedMeanings(BuildContext context) {
     return Column(
-      key: const ValueKey('revealed-answer'),
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      key: ValueKey('meanings-${_group.word}'),
       children: [
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: colors.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: colors.outlineVariant),
+        for (var index = 0; index < _group.meanings.length; index++) ...[
+          _meaningCard(context, _group.meanings[index], index + 1),
+          if (index != _group.meanings.length - 1) const SizedBox(height: 12),
+        ],
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: _groupComplete ? _continue : null,
+            icon: Icon(
+              _groupIndex == widget.groups.length - 1
+                  ? Icons.check_rounded
+                  : Icons.arrow_forward_rounded,
+            ),
+            label: Text(
+              _groupComplete
+                  ? (_groupIndex == widget.groups.length - 1
+                        ? 'Finish review'
+                        : 'Next word')
+                  : 'Answer each meaning to continue',
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+      ],
+    );
+  }
+
+  Widget _meaningCard(BuildContext context, SavedMeaning meaning, int number) {
+    final colors = Theme.of(context).colorScheme;
+    final answer = _answers[meaning.id];
+    final saving = _saving.contains(meaning.id);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: answer == null
+            ? colors.surfaceContainerLow
+            : (answer
+                  ? colors.tertiaryContainer.withValues(alpha: 0.65)
+                  : colors.errorContainer.withValues(alpha: 0.55)),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: answer == null
+              ? colors.outlineVariant
+              : (answer ? colors.tertiary : colors.error),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  PartOfSpeechBadge(label: word.partOfSpeech),
-                  const Spacer(),
-                  if (word.phonetic != null)
-                    Text(
-                      word.phonetic!,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Text(
-                word.definition,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(height: 1.5),
-              ),
-              if (word.exampleSentence != null) ...[
-                const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: colors.secondaryContainer.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(16),
+              CircleAvatar(
+                radius: 14,
+                backgroundColor: colors.primaryContainer,
+                child: Text(
+                  '$number',
+                  style: TextStyle(
+                    color: colors.onPrimaryContainer,
+                    fontWeight: FontWeight.w800,
                   ),
-                  child: Text(
-                    '“${word.exampleSentence}”',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colors.onSecondaryContainer,
-                      fontStyle: FontStyle.italic,
-                      height: 1.4,
-                    ),
+                ),
+              ),
+              const SizedBox(width: 9),
+              PartOfSpeechBadge(label: meaning.partOfSpeech),
+              const Spacer(),
+              if (answer != null)
+                Icon(
+                  answer
+                      ? Icons.check_circle_rounded
+                      : Icons.replay_circle_filled,
+                  color: answer ? colors.tertiary : colors.error,
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            meaning.definition,
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(height: 1.45),
+          ),
+          if (meaning.exampleSentence != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              '“${meaning.exampleSentence}”',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colors.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          if (answer == null)
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: saving
+                        ? null
+                        : () => _recordAnswer(meaning, false),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Again'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: saving
+                        ? null
+                        : () => _recordAnswer(meaning, true),
+                    icon: saving
+                        ? const SizedBox.square(
+                            dimension: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.check_rounded),
+                    label: const Text('Remembered'),
                   ),
                 ),
               ],
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.history_rounded, size: 17, color: colors.outline),
-            const SizedBox(width: 6),
+            )
+          else
             Text(
-              '${word.reviewCount} successful '
-              '${word.reviewCount == 1 ? 'review' : 'reviews'} before this',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
-            ),
-          ],
-        ),
-        const SizedBox(height: 26),
-        Text(
-          'Did you remember this meaning?',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: _isSaving ? null : () => _recordAnswer(false),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4),
-                  child: Column(
-                    children: [
-                      Icon(Icons.refresh_rounded),
-                      SizedBox(height: 3),
-                      Text('Again'),
-                      Text('Review sooner', style: TextStyle(fontSize: 11)),
-                    ],
-                  ),
-                ),
+              answer ? 'Remembered' : 'Practice again sooner',
+              style: TextStyle(
+                color: answer
+                    ? colors.onTertiaryContainer
+                    : colors.onErrorContainer,
+                fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: FilledButton(
-                onPressed: _isSaving ? null : () => _recordAnswer(true),
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4),
-                  child: Column(
-                    children: [
-                      Icon(Icons.check_rounded),
-                      SizedBox(height: 3),
-                      Text('Remembered'),
-                      Text('Space it out', style: TextStyle(fontSize: 11)),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

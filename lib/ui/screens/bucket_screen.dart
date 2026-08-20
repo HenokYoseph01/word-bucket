@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/database/database.dart';
 import '../../data/database/word_dao.dart';
+import '../../data/models/review_group.dart';
 import '../../providers/word_provider.dart';
 import 'review_screen.dart';
 import 'walkthrough_screen.dart';
@@ -257,8 +258,10 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
   }
 
   Future<void> _openReviewQueue(List<SavedMeaning> words) async {
+    final groups = await buildReviewGroups(ref.read(databaseProvider), words);
+    if (!mounted || groups.isEmpty) return;
     final message = await Navigator.of(context).push<String>(
-      MaterialPageRoute(builder: (_) => ReviewScreen(words: words)),
+      MaterialPageRoute(builder: (_) => ReviewScreen(groups: groups)),
     );
     ref.invalidate(dueWordsProvider);
     ref.invalidate(savedWordsProvider);
