@@ -4,6 +4,7 @@ const getInitialWordMethod = 'getInitialWord';
 const finishBucketifyMethod = 'finishBucketify';
 const quickTileChannelName = 'wordbucket/quick_tile';
 const requestAddQuickTileMethod = 'requestAddQuickTile';
+const readingCompanionChannelName = 'wordbucket/reading_companion';
 
 const reviewTaskUniqueName = 'wordbucket.dailyReview';
 const reviewTaskName = 'wordReview';

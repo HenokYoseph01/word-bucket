@@ -7,4 +7,8 @@
     <string name="quick_bucketify_tile">Bucketify</string>
     <string name="copy_word_first">Copy a word first, then tap Bucketify again.</string>
     <string name="word_saved">“%1$s” saved to your bucket.</string>
+    <string name="reading_companion_channel">Reading Companion</string>
+    <string name="reading_companion_active">Reading Companion is active</string>
+    <string name="reading_companion_hint">Copy a word, then tap the floating book.</string>
+    <string name="stop_reading_companion">Stop companion</string>
 </resources>
