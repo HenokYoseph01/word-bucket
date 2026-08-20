@@ -61,7 +61,7 @@ class MainActivity : FlutterActivity() {
                     result.success(null)
                 }
                 "isReadingCompanionActive" -> {
-                    result.success(ReadingCompanionService.isActive(this))
+                    result.success(ReadingCompanionService.isActive())
                 }
                 "startReadingCompanion" -> {
                     if (!Settings.canDrawOverlays(this)) {

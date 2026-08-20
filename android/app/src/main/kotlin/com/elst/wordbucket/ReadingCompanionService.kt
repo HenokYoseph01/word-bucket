@@ -285,9 +285,12 @@ class ReadingCompanionService : Service() {
         @Volatile
         private var instance: ReadingCompanionService? = null
 
-        fun isActive(context: Context): Boolean =
-            instance != null || context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-                .getBoolean(KEY_ACTIVE, false)
+        fun isActive(): Boolean {
+            // The service instance is the source of truth. The stored value is
+            // only used to remember intent across system recreation and must not
+            // leave the Flutter switch looking active after drag-to-remove.
+            return instance != null
+        }
 
         fun updateActiveColor(context: Context, color: Int) {
             context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

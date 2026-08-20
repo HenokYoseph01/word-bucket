@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,17 +31,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   bool _companionActive = false;
   bool _companionUpdating = false;
   bool _startCompanionAfterPermission = false;
+  Timer? _companionStatusTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _companionStatusTimer = Timer.periodic(const Duration(milliseconds: 800), (
+      _,
+    ) {
+      if (_companionActive && !_companionUpdating) {
+        _refreshCompanionStatus();
+      }
+    });
     _load();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _companionStatusTimer?.cancel();
     super.dispose();
   }
 
