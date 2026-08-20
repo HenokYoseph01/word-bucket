@@ -40,8 +40,8 @@ final savedMeaningsProvider = StreamProvider<List<SavedMeaning>>((ref) {
   return ref.watch(databaseProvider).watchAllMeanings();
 });
 
-final dueWordsProvider = FutureProvider<List<SavedWord>>((ref) {
-  return ref.watch(databaseProvider).getWordsDueForReview();
+final dueWordsProvider = FutureProvider<List<SavedMeaning>>((ref) {
+  return ref.watch(databaseProvider).getMeaningsDueForReview();
 });
 
 class ReviewStatistics {
@@ -66,7 +66,7 @@ class ReviewStatistics {
   final int totalReviews;
   final int rememberedReviews;
   final int currentStreak;
-  final List<SavedWord> upcomingWords;
+  final List<SavedMeaning> upcomingWords;
   final List<WordMastery> wordMastery;
   final List<DailyReviewActivity> weeklyActivity;
   final int longestStreak;
@@ -132,7 +132,7 @@ class WordMastery {
     required this.strengthScore,
   });
 
-  final SavedWord word;
+  final SavedMeaning word;
   final List<ReviewAttempt> history;
   final int remembered;
   final MasteryLevel level;
@@ -147,22 +147,24 @@ final reviewStatisticsProvider = FutureProvider<ReviewStatistics>((ref) async {
   final database = ref.watch(databaseProvider);
   final results = await Future.wait([
     database.getAllWords(),
-    database.getWordsDueForReview(),
+    database.getMeaningsDueForReview(),
     database.getReviewHistory(),
+    database.select(database.savedMeanings).get(),
   ]);
   final words = results[0] as List<SavedWord>;
-  final dueWords = results[1] as List<SavedWord>;
+  final dueWords = results[1] as List<SavedMeaning>;
   final history = results[2] as List<ReviewAttempt>;
+  final meanings = results[3] as List<SavedMeaning>;
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
   final tomorrow = today.add(const Duration(days: 1));
   final dayAfterTomorrow = tomorrow.add(const Duration(days: 1));
   final endOfForecast = today.add(const Duration(days: 8));
 
-  final mastery = words
+  final mastery = meanings
       .map((word) {
         final wordHistory = history
-            .where((attempt) => attempt.word == word.word)
+            .where((attempt) => attempt.meaningId == word.id)
             .toList(growable: false);
         final remembered = wordHistory
             .where((attempt) => attempt.remembered)
@@ -200,7 +202,7 @@ final reviewStatisticsProvider = FutureProvider<ReviewStatistics>((ref) async {
       .toList(growable: false);
 
   final upcoming =
-      words
+      meanings
           .where(
             (word) =>
                 word.nextReviewAt != null && word.nextReviewAt!.isAfter(now),
@@ -229,13 +231,13 @@ final reviewStatisticsProvider = FutureProvider<ReviewStatistics>((ref) async {
     );
   });
 
-  final overdueWords = words
+  final overdueWords = meanings
       .where(
         (word) =>
             word.nextReviewAt == null || word.nextReviewAt!.isBefore(today),
       )
       .length;
-  final dueToday = words
+  final dueToday = meanings
       .where(
         (word) =>
             word.nextReviewAt != null &&
@@ -243,7 +245,7 @@ final reviewStatisticsProvider = FutureProvider<ReviewStatistics>((ref) async {
             word.nextReviewAt!.isBefore(tomorrow),
       )
       .length;
-  final dueTomorrow = words
+  final dueTomorrow = meanings
       .where(
         (word) =>
             word.nextReviewAt != null &&
@@ -251,7 +253,7 @@ final reviewStatisticsProvider = FutureProvider<ReviewStatistics>((ref) async {
             word.nextReviewAt!.isBefore(dayAfterTomorrow),
       )
       .length;
-  final dueThisWeek = words
+  final dueThisWeek = meanings
       .where(
         (word) =>
             word.nextReviewAt != null &&
@@ -517,8 +519,11 @@ class WordNotifier extends StateNotifier<LookupState> {
     return _homeWidget.syncFromDatabase(_database);
   }
 
-  Future<void> recordReview(SavedWord word, {required bool remembered}) async {
-    await _database.recordReviewAttempt(word, remembered: remembered);
+  Future<void> recordReview(
+    SavedMeaning meaning, {
+    required bool remembered,
+  }) async {
+    await _database.recordMeaningReview(meaning, remembered: remembered);
   }
 
   void clear() {

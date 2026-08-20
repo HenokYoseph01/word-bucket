@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/constants.dart';
 import 'core/theme.dart';
+import 'data/database/database.dart';
 import 'data/database/word_dao.dart';
 import 'providers/word_provider.dart';
 import 'providers/theme_provider.dart';
@@ -50,32 +51,39 @@ class _WordBucketAppState extends ConsumerState<WordBucketApp> {
     }
   }
 
-  Future<void> _openReview(String wordText) async {
+  Future<void> _openReview(String payload) async {
     if (_isReviewScreenOpen || !mounted) return;
 
     final context = navigatorKey.currentContext;
     if (context == null) {
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _openReview(wordText),
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) => _openReview(payload));
       return;
     }
 
     final database = ref.read(databaseProvider);
-    final word = await database.getWord(wordText);
+    SavedMeaning? meaning;
+    if (payload.startsWith('meaning:')) {
+      final id = int.tryParse(payload.substring('meaning:'.length));
+      if (id != null) meaning = await database.getMeaning(id);
+    } else {
+      // Compatibility with notifications scheduled before version 1.1.0.
+      meaning = (await database.getMeanings(payload)).firstOrNull;
+    }
     if (!mounted || !context.mounted) return;
-    if (word == null) {
+    if (meaning == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('“$wordText” is no longer in your bucket.')),
+        const SnackBar(
+          content: Text('That meaning is no longer in your bucket.'),
+        ),
       );
       return;
     }
 
-    final dueWords = await database.getWordsDueForReview();
+    final dueWords = await database.getMeaningsDueForReview();
     if (!mounted || !context.mounted) return;
     final reviewWords = [
-      word,
-      ...dueWords.where((dueWord) => dueWord.word != word.word),
+      meaning,
+      ...dueWords.where((dueWord) => dueWord.id != meaning!.id),
     ];
 
     _isReviewScreenOpen = true;

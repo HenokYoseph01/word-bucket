@@ -69,7 +69,7 @@ class NotificationService {
         true;
   }
 
-  Future<void> showReview(SavedWord word) async {
+  Future<void> showReview(SavedMeaning word) async {
     await initialize();
 
     final example = word.exampleSentence == null
@@ -86,15 +86,18 @@ class NotificationService {
       styleInformation: BigTextStyleInformation(body),
     );
     await _notifications.show(
-      id: word.word.hashCode,
+      id: word.id,
       title: 'Tap to review: ${word.word}',
       body: body,
       notificationDetails: NotificationDetails(android: androidDetails),
-      payload: word.word,
+      payload: 'meaning:${word.id}',
     );
   }
 
-  Future<void> showStreakReminder(SavedWord word, {required int streak}) async {
+  Future<void> showStreakReminder(
+    SavedMeaning word, {
+    required int streak,
+  }) async {
     await initialize();
 
     final body = streak > 0
@@ -114,7 +117,7 @@ class NotificationService {
       title: 'A little WordBucket moment?',
       body: body,
       notificationDetails: const NotificationDetails(android: androidDetails),
-      payload: word.word,
+      payload: 'meaning:${word.id}',
     );
   }
 }

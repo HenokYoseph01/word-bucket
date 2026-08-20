@@ -21,7 +21,7 @@ void reviewCallbackDispatcher() {
     try {
       if (await _wasReminderSentToday()) return true;
 
-      final word = await database.getWordDueForReview();
+      final word = await database.getMeaningDueForReview();
       if (word == null) return true;
 
       final notifications = NotificationService();

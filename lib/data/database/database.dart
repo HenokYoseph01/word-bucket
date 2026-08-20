@@ -25,12 +25,14 @@ class ReviewAttempts extends Table {
   DateTimeColumn get reviewedAt => dateTime()();
   BoolColumn get remembered => boolean()();
   IntColumn get reviewCount => integer()();
+  IntColumn get meaningId => integer().nullable()();
 }
 
 @DataClassName('SavedMeaning')
 class SavedMeanings extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get word => text()();
+  TextColumn get phonetic => text().nullable()();
   TextColumn get partOfSpeech => text()();
   TextColumn get definition => text()();
   TextColumn get exampleSentence => text().nullable()();
@@ -56,7 +58,7 @@ class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration {
@@ -70,11 +72,39 @@ class AppDatabase extends _$AppDatabase {
           await migrator.createTable(savedMeanings);
           await customStatement('''
             INSERT OR IGNORE INTO saved_meanings
-              (word, part_of_speech, definition, example_sentence, saved_at,
+              (word, phonetic, part_of_speech, definition, example_sentence, saved_at,
                review_count, next_review_at)
-            SELECT word, part_of_speech, definition, example_sentence, saved_at,
+            SELECT word, phonetic, part_of_speech, definition, example_sentence, saved_at,
                    review_count, next_review_at
             FROM words
+          ''');
+        }
+        if (from >= 3 && from < 4) {
+          await migrator.addColumn(savedMeanings, savedMeanings.phonetic);
+          await customStatement('''
+            UPDATE saved_meanings
+            SET phonetic = (
+              SELECT words.phonetic FROM words
+              WHERE words.word = saved_meanings.word
+            )
+          ''');
+        }
+        if (from >= 2 && from < 4) {
+          await migrator.addColumn(reviewAttempts, reviewAttempts.meaningId);
+        }
+        if (from < 4) {
+          await customStatement('''
+            UPDATE review_attempts
+            SET meaning_id = (
+              SELECT sm.id
+              FROM saved_meanings sm
+              JOIN words w ON w.word = sm.word
+              WHERE sm.word = review_attempts.word
+              ORDER BY CASE WHEN sm.definition = w.definition THEN 0 ELSE 1 END,
+                       sm.saved_at ASC
+              LIMIT 1
+            )
+            WHERE meaning_id IS NULL
           ''');
         }
       },

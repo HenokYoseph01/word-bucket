@@ -33,6 +33,7 @@ extension WordDao on AppDatabase {
       await into(savedMeanings).insert(
         SavedMeaningsCompanion.insert(
           word: model.word,
+          phonetic: Value(model.phonetic),
           partOfSpeech: model.partOfSpeech,
           definition: model.definition,
           exampleSentence: Value(model.exampleSentence),
@@ -107,6 +108,7 @@ extension WordDao on AppDatabase {
       )) {
         await (update(words)..where((row) => row.word.equals(text))).write(
           WordsCompanion(
+            phonetic: Value(replacement.phonetic),
             partOfSpeech: Value(replacement.partOfSpeech),
             definition: Value(replacement.definition),
             exampleSentence: Value(replacement.exampleSentence),
@@ -142,6 +144,73 @@ extension WordDao on AppDatabase {
           ..where((meaning) => meaning.word.equals(text))
           ..orderBy([(meaning) => OrderingTerm.asc(meaning.savedAt)]))
         .get();
+  }
+
+  Future<SavedMeaning?> getMeaning(int id) {
+    return (select(
+      savedMeanings,
+    )..where((meaning) => meaning.id.equals(id))).getSingleOrNull();
+  }
+
+  Future<SavedMeaning?> getMeaningDueForReview({DateTime? at}) {
+    return getMeaningsDueForReview(
+      at: at,
+      limit: 1,
+    ).then((meanings) => meanings.firstOrNull);
+  }
+
+  Future<List<SavedMeaning>> getMeaningsDueForReview({
+    DateTime? at,
+    int? limit,
+  }) {
+    final reviewTime = at ?? DateTime.now();
+    final query = select(savedMeanings)
+      ..where(
+        (meaning) =>
+            meaning.nextReviewAt.isNull() |
+            meaning.nextReviewAt.isSmallerOrEqualValue(reviewTime),
+      )
+      ..orderBy([
+        (meaning) => OrderingTerm.asc(meaning.nextReviewAt),
+        (meaning) => OrderingTerm.asc(meaning.savedAt),
+      ]);
+    if (limit != null) query.limit(limit);
+    return query.get();
+  }
+
+  Future<void> recordMeaningReview(
+    SavedMeaning meaning, {
+    required bool remembered,
+    DateTime? reviewedAt,
+  }) {
+    return transaction(() async {
+      const reviewIntervals = [1, 3, 7, 14, 30];
+      final completedReviews = remembered ? meaning.reviewCount + 1 : 0;
+      final intervalIndex = completedReviews.clamp(
+        0,
+        reviewIntervals.length - 1,
+      );
+      final nextReview = DateTime.now().add(
+        Duration(days: remembered ? reviewIntervals[intervalIndex] : 1),
+      );
+      await (update(
+        savedMeanings,
+      )..where((row) => row.id.equals(meaning.id))).write(
+        SavedMeaningsCompanion(
+          reviewCount: Value(completedReviews),
+          nextReviewAt: Value(nextReview),
+        ),
+      );
+      await into(reviewAttempts).insert(
+        ReviewAttemptsCompanion.insert(
+          word: meaning.word,
+          reviewedAt: reviewedAt ?? DateTime.now(),
+          remembered: remembered,
+          reviewCount: completedReviews,
+          meaningId: Value(meaning.id),
+        ),
+      );
+    });
   }
 
   Stream<List<SavedMeaning>> watchAllMeanings() {

@@ -15,7 +15,7 @@ class WordProgressScreen extends StatelessWidget {
     final percentage = (mastery.recallRate * 100).round();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Word progress'), centerTitle: true),
+      appBar: AppBar(title: const Text('Meaning progress'), centerTitle: true),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
@@ -106,7 +106,7 @@ class WordProgressScreen extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Every answer recorded for this word',
+              'Every answer recorded for this meaning',
               style: TextStyle(color: colors.onSurfaceVariant),
             ),
             const SizedBox(height: 10),
@@ -114,7 +114,7 @@ class WordProgressScreen extends StatelessWidget {
               const Card(
                 child: Padding(
                   padding: EdgeInsets.all(20),
-                  child: Text('This word has not been reviewed yet.'),
+                  child: Text('This meaning has not been reviewed yet.'),
                 ),
               )
             else

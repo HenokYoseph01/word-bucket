@@ -12,7 +12,7 @@ class HomeWidgetService {
     AppDatabase database, {
     String? preferredWord,
   }) async {
-    final words = await database.getAllWords();
+    final words = await database.watchAllMeanings().first;
     final currentWord = await HomeWidget.getWidgetData<String>('word');
     final selectedWord = preferredWord ?? currentWord;
     var selectedIndex = words.indexWhere((word) => word.word == selectedWord);
@@ -20,10 +20,10 @@ class HomeWidgetService {
 
     final items = words
         .map(
-          (word) => {
-            'word': word.word,
-            'partOfSpeech': word.partOfSpeech,
-            'definition': word.definition,
+          (meaning) => {
+            'word': meaning.word,
+            'partOfSpeech': meaning.partOfSpeech,
+            'definition': meaning.definition,
           },
         )
         .toList(growable: false);

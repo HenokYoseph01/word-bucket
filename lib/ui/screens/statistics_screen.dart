@@ -78,16 +78,16 @@ class StatisticsScreen extends ConsumerWidget {
                 const SizedBox(height: 28),
                 const _SectionHeading(
                   icon: Icons.donut_large_rounded,
-                  title: 'Word mastery',
-                  subtitle: 'How securely your vocabulary is settling in',
+                  title: 'Meaning mastery',
+                  subtitle: 'How securely each saved meaning is settling in',
                 ),
                 const SizedBox(height: 10),
                 _MasteryOverview(data: data),
                 const SizedBox(height: 28),
                 const _SectionHeading(
                   icon: Icons.emoji_events_outlined,
-                  title: 'Strongest words',
-                  subtitle: 'Words you remember most reliably',
+                  title: 'Strongest meanings',
+                  subtitle: 'Meanings you remember most reliably',
                 ),
                 const SizedBox(height: 10),
                 _RankedWordList(
@@ -104,7 +104,7 @@ class StatisticsScreen extends ConsumerWidget {
                 const SizedBox(height: 10),
                 _RankedWordList(
                   words: data.weakestWords,
-                  emptyMessage: 'No reviewed words need attention yet.',
+                  emptyMessage: 'No reviewed meanings need attention yet.',
                   strongest: false,
                 ),
                 const SizedBox(height: 28),
@@ -712,7 +712,7 @@ class _RankedWordList extends StatelessWidget {
                 ),
               ),
               title: Text(
-                words[index].word.word,
+                '${words[index].word.word} · ${words[index].word.partOfSpeech}',
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
               subtitle: Text(

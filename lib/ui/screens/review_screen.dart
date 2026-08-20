@@ -8,7 +8,7 @@ import '../widgets/part_of_speech_badge.dart';
 class ReviewScreen extends ConsumerStatefulWidget {
   const ReviewScreen({required this.words, super.key});
 
-  final List<SavedWord> words;
+  final List<SavedMeaning> words;
 
   @override
   ConsumerState<ReviewScreen> createState() => _ReviewScreenState();
@@ -67,7 +67,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
             Row(
               children: [
                 Text(
-                  'WORD $currentNumber OF ${widget.words.length}',
+                  'MEANING $currentNumber OF ${widget.words.length}',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
                     color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.w800,
@@ -147,7 +147,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 ),
                 child: _isAnswerRevealed
                     ? _buildRevealedAnswer(context, word)
-                    : _buildRecallPrompt(context),
+                    : _buildRecallPrompt(context, word),
               ),
             ),
             if (_isSaving) ...[
@@ -160,7 +160,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     );
   }
 
-  Widget _buildRecallPrompt(BuildContext context) {
+  Widget _buildRecallPrompt(BuildContext context, SavedMeaning meaning) {
     final colors = Theme.of(context).colorScheme;
     return Container(
       key: const ValueKey('recall-prompt'),
@@ -179,13 +179,15 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'What does this word mean?',
+            'Can you recall this meaning?',
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 6),
+          PartOfSpeechBadge(label: meaning.partOfSpeech),
+          const SizedBox(height: 8),
           Text(
             'Take a moment to recall it before checking.',
             style: Theme.of(
@@ -207,7 +209,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     );
   }
 
-  Widget _buildRevealedAnswer(BuildContext context, SavedWord word) {
+  Widget _buildRevealedAnswer(BuildContext context, SavedMeaning word) {
     final colors = Theme.of(context).colorScheme;
     return Column(
       key: const ValueKey('revealed-answer'),
@@ -282,7 +284,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         ),
         const SizedBox(height: 26),
         Text(
-          'Did you remember this word?',
+          'Did you remember this meaning?',
           style: Theme.of(
             context,
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),

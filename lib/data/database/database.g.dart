@@ -606,6 +606,17 @@ class $ReviewAttemptsTable extends ReviewAttempts
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _meaningIdMeta = const VerificationMeta(
+    'meaningId',
+  );
+  @override
+  late final GeneratedColumn<int> meaningId = GeneratedColumn<int>(
+    'meaning_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -613,6 +624,7 @@ class $ReviewAttemptsTable extends ReviewAttempts
     reviewedAt,
     remembered,
     reviewCount,
+    meaningId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -664,6 +676,12 @@ class $ReviewAttemptsTable extends ReviewAttempts
     } else if (isInserting) {
       context.missing(_reviewCountMeta);
     }
+    if (data.containsKey('meaning_id')) {
+      context.handle(
+        _meaningIdMeta,
+        meaningId.isAcceptableOrUnknown(data['meaning_id']!, _meaningIdMeta),
+      );
+    }
     return context;
   }
 
@@ -693,6 +711,10 @@ class $ReviewAttemptsTable extends ReviewAttempts
         DriftSqlType.int,
         data['${effectivePrefix}review_count'],
       )!,
+      meaningId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}meaning_id'],
+      ),
     );
   }
 
@@ -708,12 +730,14 @@ class ReviewAttempt extends DataClass implements Insertable<ReviewAttempt> {
   final DateTime reviewedAt;
   final bool remembered;
   final int reviewCount;
+  final int? meaningId;
   const ReviewAttempt({
     required this.id,
     required this.word,
     required this.reviewedAt,
     required this.remembered,
     required this.reviewCount,
+    this.meaningId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -723,6 +747,9 @@ class ReviewAttempt extends DataClass implements Insertable<ReviewAttempt> {
     map['reviewed_at'] = Variable<DateTime>(reviewedAt);
     map['remembered'] = Variable<bool>(remembered);
     map['review_count'] = Variable<int>(reviewCount);
+    if (!nullToAbsent || meaningId != null) {
+      map['meaning_id'] = Variable<int>(meaningId);
+    }
     return map;
   }
 
@@ -733,6 +760,9 @@ class ReviewAttempt extends DataClass implements Insertable<ReviewAttempt> {
       reviewedAt: Value(reviewedAt),
       remembered: Value(remembered),
       reviewCount: Value(reviewCount),
+      meaningId: meaningId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(meaningId),
     );
   }
 
@@ -747,6 +777,7 @@ class ReviewAttempt extends DataClass implements Insertable<ReviewAttempt> {
       reviewedAt: serializer.fromJson<DateTime>(json['reviewedAt']),
       remembered: serializer.fromJson<bool>(json['remembered']),
       reviewCount: serializer.fromJson<int>(json['reviewCount']),
+      meaningId: serializer.fromJson<int?>(json['meaningId']),
     );
   }
   @override
@@ -758,6 +789,7 @@ class ReviewAttempt extends DataClass implements Insertable<ReviewAttempt> {
       'reviewedAt': serializer.toJson<DateTime>(reviewedAt),
       'remembered': serializer.toJson<bool>(remembered),
       'reviewCount': serializer.toJson<int>(reviewCount),
+      'meaningId': serializer.toJson<int?>(meaningId),
     };
   }
 
@@ -767,12 +799,14 @@ class ReviewAttempt extends DataClass implements Insertable<ReviewAttempt> {
     DateTime? reviewedAt,
     bool? remembered,
     int? reviewCount,
+    Value<int?> meaningId = const Value.absent(),
   }) => ReviewAttempt(
     id: id ?? this.id,
     word: word ?? this.word,
     reviewedAt: reviewedAt ?? this.reviewedAt,
     remembered: remembered ?? this.remembered,
     reviewCount: reviewCount ?? this.reviewCount,
+    meaningId: meaningId.present ? meaningId.value : this.meaningId,
   );
   ReviewAttempt copyWithCompanion(ReviewAttemptsCompanion data) {
     return ReviewAttempt(
@@ -787,6 +821,7 @@ class ReviewAttempt extends DataClass implements Insertable<ReviewAttempt> {
       reviewCount: data.reviewCount.present
           ? data.reviewCount.value
           : this.reviewCount,
+      meaningId: data.meaningId.present ? data.meaningId.value : this.meaningId,
     );
   }
 
@@ -797,14 +832,15 @@ class ReviewAttempt extends DataClass implements Insertable<ReviewAttempt> {
           ..write('word: $word, ')
           ..write('reviewedAt: $reviewedAt, ')
           ..write('remembered: $remembered, ')
-          ..write('reviewCount: $reviewCount')
+          ..write('reviewCount: $reviewCount, ')
+          ..write('meaningId: $meaningId')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode =>
-      Object.hash(id, word, reviewedAt, remembered, reviewCount);
+      Object.hash(id, word, reviewedAt, remembered, reviewCount, meaningId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -813,7 +849,8 @@ class ReviewAttempt extends DataClass implements Insertable<ReviewAttempt> {
           other.word == this.word &&
           other.reviewedAt == this.reviewedAt &&
           other.remembered == this.remembered &&
-          other.reviewCount == this.reviewCount);
+          other.reviewCount == this.reviewCount &&
+          other.meaningId == this.meaningId);
 }
 
 class ReviewAttemptsCompanion extends UpdateCompanion<ReviewAttempt> {
@@ -822,12 +859,14 @@ class ReviewAttemptsCompanion extends UpdateCompanion<ReviewAttempt> {
   final Value<DateTime> reviewedAt;
   final Value<bool> remembered;
   final Value<int> reviewCount;
+  final Value<int?> meaningId;
   const ReviewAttemptsCompanion({
     this.id = const Value.absent(),
     this.word = const Value.absent(),
     this.reviewedAt = const Value.absent(),
     this.remembered = const Value.absent(),
     this.reviewCount = const Value.absent(),
+    this.meaningId = const Value.absent(),
   });
   ReviewAttemptsCompanion.insert({
     this.id = const Value.absent(),
@@ -835,6 +874,7 @@ class ReviewAttemptsCompanion extends UpdateCompanion<ReviewAttempt> {
     required DateTime reviewedAt,
     required bool remembered,
     required int reviewCount,
+    this.meaningId = const Value.absent(),
   }) : word = Value(word),
        reviewedAt = Value(reviewedAt),
        remembered = Value(remembered),
@@ -845,6 +885,7 @@ class ReviewAttemptsCompanion extends UpdateCompanion<ReviewAttempt> {
     Expression<DateTime>? reviewedAt,
     Expression<bool>? remembered,
     Expression<int>? reviewCount,
+    Expression<int>? meaningId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -852,6 +893,7 @@ class ReviewAttemptsCompanion extends UpdateCompanion<ReviewAttempt> {
       if (reviewedAt != null) 'reviewed_at': reviewedAt,
       if (remembered != null) 'remembered': remembered,
       if (reviewCount != null) 'review_count': reviewCount,
+      if (meaningId != null) 'meaning_id': meaningId,
     });
   }
 
@@ -861,6 +903,7 @@ class ReviewAttemptsCompanion extends UpdateCompanion<ReviewAttempt> {
     Value<DateTime>? reviewedAt,
     Value<bool>? remembered,
     Value<int>? reviewCount,
+    Value<int?>? meaningId,
   }) {
     return ReviewAttemptsCompanion(
       id: id ?? this.id,
@@ -868,6 +911,7 @@ class ReviewAttemptsCompanion extends UpdateCompanion<ReviewAttempt> {
       reviewedAt: reviewedAt ?? this.reviewedAt,
       remembered: remembered ?? this.remembered,
       reviewCount: reviewCount ?? this.reviewCount,
+      meaningId: meaningId ?? this.meaningId,
     );
   }
 
@@ -889,6 +933,9 @@ class ReviewAttemptsCompanion extends UpdateCompanion<ReviewAttempt> {
     if (reviewCount.present) {
       map['review_count'] = Variable<int>(reviewCount.value);
     }
+    if (meaningId.present) {
+      map['meaning_id'] = Variable<int>(meaningId.value);
+    }
     return map;
   }
 
@@ -899,7 +946,8 @@ class ReviewAttemptsCompanion extends UpdateCompanion<ReviewAttempt> {
           ..write('word: $word, ')
           ..write('reviewedAt: $reviewedAt, ')
           ..write('remembered: $remembered, ')
-          ..write('reviewCount: $reviewCount')
+          ..write('reviewCount: $reviewCount, ')
+          ..write('meaningId: $meaningId')
           ..write(')'))
         .toString();
   }
@@ -932,6 +980,17 @@ class $SavedMeaningsTable extends SavedMeanings
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _phoneticMeta = const VerificationMeta(
+    'phonetic',
+  );
+  @override
+  late final GeneratedColumn<String> phonetic = GeneratedColumn<String>(
+    'phonetic',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _partOfSpeechMeta = const VerificationMeta(
     'partOfSpeech',
@@ -1004,6 +1063,7 @@ class $SavedMeaningsTable extends SavedMeanings
   List<GeneratedColumn> get $columns => [
     id,
     word,
+    phonetic,
     partOfSpeech,
     definition,
     exampleSentence,
@@ -1033,6 +1093,12 @@ class $SavedMeaningsTable extends SavedMeanings
       );
     } else if (isInserting) {
       context.missing(_wordMeta);
+    }
+    if (data.containsKey('phonetic')) {
+      context.handle(
+        _phoneticMeta,
+        phonetic.isAcceptableOrUnknown(data['phonetic']!, _phoneticMeta),
+      );
     }
     if (data.containsKey('part_of_speech')) {
       context.handle(
@@ -1109,6 +1175,10 @@ class $SavedMeaningsTable extends SavedMeanings
         DriftSqlType.string,
         data['${effectivePrefix}word'],
       )!,
+      phonetic: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}phonetic'],
+      ),
       partOfSpeech: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}part_of_speech'],
@@ -1145,6 +1215,7 @@ class $SavedMeaningsTable extends SavedMeanings
 class SavedMeaning extends DataClass implements Insertable<SavedMeaning> {
   final int id;
   final String word;
+  final String? phonetic;
   final String partOfSpeech;
   final String definition;
   final String? exampleSentence;
@@ -1154,6 +1225,7 @@ class SavedMeaning extends DataClass implements Insertable<SavedMeaning> {
   const SavedMeaning({
     required this.id,
     required this.word,
+    this.phonetic,
     required this.partOfSpeech,
     required this.definition,
     this.exampleSentence,
@@ -1166,6 +1238,9 @@ class SavedMeaning extends DataClass implements Insertable<SavedMeaning> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['word'] = Variable<String>(word);
+    if (!nullToAbsent || phonetic != null) {
+      map['phonetic'] = Variable<String>(phonetic);
+    }
     map['part_of_speech'] = Variable<String>(partOfSpeech);
     map['definition'] = Variable<String>(definition);
     if (!nullToAbsent || exampleSentence != null) {
@@ -1183,6 +1258,9 @@ class SavedMeaning extends DataClass implements Insertable<SavedMeaning> {
     return SavedMeaningsCompanion(
       id: Value(id),
       word: Value(word),
+      phonetic: phonetic == null && nullToAbsent
+          ? const Value.absent()
+          : Value(phonetic),
       partOfSpeech: Value(partOfSpeech),
       definition: Value(definition),
       exampleSentence: exampleSentence == null && nullToAbsent
@@ -1204,6 +1282,7 @@ class SavedMeaning extends DataClass implements Insertable<SavedMeaning> {
     return SavedMeaning(
       id: serializer.fromJson<int>(json['id']),
       word: serializer.fromJson<String>(json['word']),
+      phonetic: serializer.fromJson<String?>(json['phonetic']),
       partOfSpeech: serializer.fromJson<String>(json['partOfSpeech']),
       definition: serializer.fromJson<String>(json['definition']),
       exampleSentence: serializer.fromJson<String?>(json['exampleSentence']),
@@ -1218,6 +1297,7 @@ class SavedMeaning extends DataClass implements Insertable<SavedMeaning> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'word': serializer.toJson<String>(word),
+      'phonetic': serializer.toJson<String?>(phonetic),
       'partOfSpeech': serializer.toJson<String>(partOfSpeech),
       'definition': serializer.toJson<String>(definition),
       'exampleSentence': serializer.toJson<String?>(exampleSentence),
@@ -1230,6 +1310,7 @@ class SavedMeaning extends DataClass implements Insertable<SavedMeaning> {
   SavedMeaning copyWith({
     int? id,
     String? word,
+    Value<String?> phonetic = const Value.absent(),
     String? partOfSpeech,
     String? definition,
     Value<String?> exampleSentence = const Value.absent(),
@@ -1239,6 +1320,7 @@ class SavedMeaning extends DataClass implements Insertable<SavedMeaning> {
   }) => SavedMeaning(
     id: id ?? this.id,
     word: word ?? this.word,
+    phonetic: phonetic.present ? phonetic.value : this.phonetic,
     partOfSpeech: partOfSpeech ?? this.partOfSpeech,
     definition: definition ?? this.definition,
     exampleSentence: exampleSentence.present
@@ -1252,6 +1334,7 @@ class SavedMeaning extends DataClass implements Insertable<SavedMeaning> {
     return SavedMeaning(
       id: data.id.present ? data.id.value : this.id,
       word: data.word.present ? data.word.value : this.word,
+      phonetic: data.phonetic.present ? data.phonetic.value : this.phonetic,
       partOfSpeech: data.partOfSpeech.present
           ? data.partOfSpeech.value
           : this.partOfSpeech,
@@ -1276,6 +1359,7 @@ class SavedMeaning extends DataClass implements Insertable<SavedMeaning> {
     return (StringBuffer('SavedMeaning(')
           ..write('id: $id, ')
           ..write('word: $word, ')
+          ..write('phonetic: $phonetic, ')
           ..write('partOfSpeech: $partOfSpeech, ')
           ..write('definition: $definition, ')
           ..write('exampleSentence: $exampleSentence, ')
@@ -1290,6 +1374,7 @@ class SavedMeaning extends DataClass implements Insertable<SavedMeaning> {
   int get hashCode => Object.hash(
     id,
     word,
+    phonetic,
     partOfSpeech,
     definition,
     exampleSentence,
@@ -1303,6 +1388,7 @@ class SavedMeaning extends DataClass implements Insertable<SavedMeaning> {
       (other is SavedMeaning &&
           other.id == this.id &&
           other.word == this.word &&
+          other.phonetic == this.phonetic &&
           other.partOfSpeech == this.partOfSpeech &&
           other.definition == this.definition &&
           other.exampleSentence == this.exampleSentence &&
@@ -1314,6 +1400,7 @@ class SavedMeaning extends DataClass implements Insertable<SavedMeaning> {
 class SavedMeaningsCompanion extends UpdateCompanion<SavedMeaning> {
   final Value<int> id;
   final Value<String> word;
+  final Value<String?> phonetic;
   final Value<String> partOfSpeech;
   final Value<String> definition;
   final Value<String?> exampleSentence;
@@ -1323,6 +1410,7 @@ class SavedMeaningsCompanion extends UpdateCompanion<SavedMeaning> {
   const SavedMeaningsCompanion({
     this.id = const Value.absent(),
     this.word = const Value.absent(),
+    this.phonetic = const Value.absent(),
     this.partOfSpeech = const Value.absent(),
     this.definition = const Value.absent(),
     this.exampleSentence = const Value.absent(),
@@ -1333,6 +1421,7 @@ class SavedMeaningsCompanion extends UpdateCompanion<SavedMeaning> {
   SavedMeaningsCompanion.insert({
     this.id = const Value.absent(),
     required String word,
+    this.phonetic = const Value.absent(),
     required String partOfSpeech,
     required String definition,
     this.exampleSentence = const Value.absent(),
@@ -1346,6 +1435,7 @@ class SavedMeaningsCompanion extends UpdateCompanion<SavedMeaning> {
   static Insertable<SavedMeaning> custom({
     Expression<int>? id,
     Expression<String>? word,
+    Expression<String>? phonetic,
     Expression<String>? partOfSpeech,
     Expression<String>? definition,
     Expression<String>? exampleSentence,
@@ -1356,6 +1446,7 @@ class SavedMeaningsCompanion extends UpdateCompanion<SavedMeaning> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (word != null) 'word': word,
+      if (phonetic != null) 'phonetic': phonetic,
       if (partOfSpeech != null) 'part_of_speech': partOfSpeech,
       if (definition != null) 'definition': definition,
       if (exampleSentence != null) 'example_sentence': exampleSentence,
@@ -1368,6 +1459,7 @@ class SavedMeaningsCompanion extends UpdateCompanion<SavedMeaning> {
   SavedMeaningsCompanion copyWith({
     Value<int>? id,
     Value<String>? word,
+    Value<String?>? phonetic,
     Value<String>? partOfSpeech,
     Value<String>? definition,
     Value<String?>? exampleSentence,
@@ -1378,6 +1470,7 @@ class SavedMeaningsCompanion extends UpdateCompanion<SavedMeaning> {
     return SavedMeaningsCompanion(
       id: id ?? this.id,
       word: word ?? this.word,
+      phonetic: phonetic ?? this.phonetic,
       partOfSpeech: partOfSpeech ?? this.partOfSpeech,
       definition: definition ?? this.definition,
       exampleSentence: exampleSentence ?? this.exampleSentence,
@@ -1395,6 +1488,9 @@ class SavedMeaningsCompanion extends UpdateCompanion<SavedMeaning> {
     }
     if (word.present) {
       map['word'] = Variable<String>(word.value);
+    }
+    if (phonetic.present) {
+      map['phonetic'] = Variable<String>(phonetic.value);
     }
     if (partOfSpeech.present) {
       map['part_of_speech'] = Variable<String>(partOfSpeech.value);
@@ -1422,6 +1518,7 @@ class SavedMeaningsCompanion extends UpdateCompanion<SavedMeaning> {
     return (StringBuffer('SavedMeaningsCompanion(')
           ..write('id: $id, ')
           ..write('word: $word, ')
+          ..write('phonetic: $phonetic, ')
           ..write('partOfSpeech: $partOfSpeech, ')
           ..write('definition: $definition, ')
           ..write('exampleSentence: $exampleSentence, ')
@@ -1717,6 +1814,7 @@ typedef $$ReviewAttemptsTableCreateCompanionBuilder =
       required DateTime reviewedAt,
       required bool remembered,
       required int reviewCount,
+      Value<int?> meaningId,
     });
 typedef $$ReviewAttemptsTableUpdateCompanionBuilder =
     ReviewAttemptsCompanion Function({
@@ -1725,6 +1823,7 @@ typedef $$ReviewAttemptsTableUpdateCompanionBuilder =
       Value<DateTime> reviewedAt,
       Value<bool> remembered,
       Value<int> reviewCount,
+      Value<int?> meaningId,
     });
 
 class $$ReviewAttemptsTableFilterComposer
@@ -1758,6 +1857,11 @@ class $$ReviewAttemptsTableFilterComposer
 
   ColumnFilters<int> get reviewCount => $composableBuilder(
     column: $table.reviewCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get meaningId => $composableBuilder(
+    column: $table.meaningId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -1795,6 +1899,11 @@ class $$ReviewAttemptsTableOrderingComposer
     column: $table.reviewCount,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get meaningId => $composableBuilder(
+    column: $table.meaningId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ReviewAttemptsTableAnnotationComposer
@@ -1826,6 +1935,9 @@ class $$ReviewAttemptsTableAnnotationComposer
     column: $table.reviewCount,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get meaningId =>
+      $composableBuilder(column: $table.meaningId, builder: (column) => column);
 }
 
 class $$ReviewAttemptsTableTableManager
@@ -1866,12 +1978,14 @@ class $$ReviewAttemptsTableTableManager
                 Value<DateTime> reviewedAt = const Value.absent(),
                 Value<bool> remembered = const Value.absent(),
                 Value<int> reviewCount = const Value.absent(),
+                Value<int?> meaningId = const Value.absent(),
               }) => ReviewAttemptsCompanion(
                 id: id,
                 word: word,
                 reviewedAt: reviewedAt,
                 remembered: remembered,
                 reviewCount: reviewCount,
+                meaningId: meaningId,
               ),
           createCompanionCallback:
               ({
@@ -1880,12 +1994,14 @@ class $$ReviewAttemptsTableTableManager
                 required DateTime reviewedAt,
                 required bool remembered,
                 required int reviewCount,
+                Value<int?> meaningId = const Value.absent(),
               }) => ReviewAttemptsCompanion.insert(
                 id: id,
                 word: word,
                 reviewedAt: reviewedAt,
                 remembered: remembered,
                 reviewCount: reviewCount,
+                meaningId: meaningId,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -1916,6 +2032,7 @@ typedef $$SavedMeaningsTableCreateCompanionBuilder =
     SavedMeaningsCompanion Function({
       Value<int> id,
       required String word,
+      Value<String?> phonetic,
       required String partOfSpeech,
       required String definition,
       Value<String?> exampleSentence,
@@ -1927,6 +2044,7 @@ typedef $$SavedMeaningsTableUpdateCompanionBuilder =
     SavedMeaningsCompanion Function({
       Value<int> id,
       Value<String> word,
+      Value<String?> phonetic,
       Value<String> partOfSpeech,
       Value<String> definition,
       Value<String?> exampleSentence,
@@ -1951,6 +2069,11 @@ class $$SavedMeaningsTableFilterComposer
 
   ColumnFilters<String> get word => $composableBuilder(
     column: $table.word,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get phonetic => $composableBuilder(
+    column: $table.phonetic,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2004,6 +2127,11 @@ class $$SavedMeaningsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get phonetic => $composableBuilder(
+    column: $table.phonetic,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get partOfSpeech => $composableBuilder(
     column: $table.partOfSpeech,
     builder: (column) => ColumnOrderings(column),
@@ -2049,6 +2177,9 @@ class $$SavedMeaningsTableAnnotationComposer
 
   GeneratedColumn<String> get word =>
       $composableBuilder(column: $table.word, builder: (column) => column);
+
+  GeneratedColumn<String> get phonetic =>
+      $composableBuilder(column: $table.phonetic, builder: (column) => column);
 
   GeneratedColumn<String> get partOfSpeech => $composableBuilder(
     column: $table.partOfSpeech,
@@ -2112,6 +2243,7 @@ class $$SavedMeaningsTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> word = const Value.absent(),
+                Value<String?> phonetic = const Value.absent(),
                 Value<String> partOfSpeech = const Value.absent(),
                 Value<String> definition = const Value.absent(),
                 Value<String?> exampleSentence = const Value.absent(),
@@ -2121,6 +2253,7 @@ class $$SavedMeaningsTableTableManager
               }) => SavedMeaningsCompanion(
                 id: id,
                 word: word,
+                phonetic: phonetic,
                 partOfSpeech: partOfSpeech,
                 definition: definition,
                 exampleSentence: exampleSentence,
@@ -2132,6 +2265,7 @@ class $$SavedMeaningsTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 required String word,
+                Value<String?> phonetic = const Value.absent(),
                 required String partOfSpeech,
                 required String definition,
                 Value<String?> exampleSentence = const Value.absent(),
@@ -2141,6 +2275,7 @@ class $$SavedMeaningsTableTableManager
               }) => SavedMeaningsCompanion.insert(
                 id: id,
                 word: word,
+                phonetic: phonetic,
                 partOfSpeech: partOfSpeech,
                 definition: definition,
                 exampleSentence: exampleSentence,

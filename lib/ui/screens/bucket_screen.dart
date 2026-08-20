@@ -241,13 +241,13 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     );
   }
 
-  Widget _buildReviewBanner(List<SavedWord> dueWords) {
+  Widget _buildReviewBanner(List<SavedMeaning> dueWords) {
     return Card(
       color: Theme.of(context).colorScheme.tertiaryContainer,
       child: ListTile(
         leading: const Icon(Icons.school_rounded),
         title: Text(
-          '${dueWords.length} ${dueWords.length == 1 ? 'word is' : 'words are'} due',
+          '${dueWords.length} ${dueWords.length == 1 ? 'meaning is' : 'meanings are'} due',
         ),
         subtitle: const Text('Practice your due words now'),
         trailing: const Icon(Icons.arrow_forward_rounded),
@@ -256,7 +256,7 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     );
   }
 
-  Future<void> _openReviewQueue(List<SavedWord> words) async {
+  Future<void> _openReviewQueue(List<SavedMeaning> words) async {
     final message = await Navigator.of(context).push<String>(
       MaterialPageRoute(builder: (_) => ReviewScreen(words: words)),
     );

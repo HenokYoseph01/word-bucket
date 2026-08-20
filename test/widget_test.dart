@@ -34,6 +34,11 @@ void main() {
           "('pen', '/pen/', 'noun', 'An instrument used for writing.', "
           "NULL, 1787097600, 3, 1787184000)",
         );
+        database.execute(
+          "INSERT INTO review_attempts "
+          "(word, reviewed_at, remembered, review_count) VALUES "
+          "('pen', 1787184000, 1, 3)",
+        );
         database.userVersion = 2;
       },
     );
@@ -46,6 +51,8 @@ void main() {
     expect(meanings.single.definition, 'An instrument used for writing.');
     expect(meanings.single.partOfSpeech, 'noun');
     expect(meanings.single.reviewCount, 3);
+    final history = await database.getReviewHistory();
+    expect(history.single.meaningId, meanings.single.id);
   });
 
   test('saves and reads a word', () async {
@@ -107,27 +114,34 @@ void main() {
     expect(await database.getWord('ephemeral'), isNotNull);
     expect(await database.getMeanings('ephemeral'), hasLength(2));
 
-    final originalReviewDate = words.single.nextReviewAt!;
-    await database.recordReviewAttempt(
-      words.single,
+    final originalMeaning = (await database.getMeanings('ephemeral')).first;
+    final otherMeaning = (await database.getMeanings('ephemeral')).last;
+    final otherReviewDate = otherMeaning.nextReviewAt;
+    final originalReviewDate = originalMeaning.nextReviewAt!;
+    await database.recordMeaningReview(
+      originalMeaning,
       remembered: true,
       reviewedAt: DateTime(2026, 7, 17),
     );
-    final reviewedWord = (await database.watchAllWords().first).single;
+    final reviewedMeaning = (await database.getMeaning(originalMeaning.id))!;
 
-    expect(reviewedWord.reviewCount, 1);
-    expect(reviewedWord.nextReviewAt!.isAfter(originalReviewDate), isTrue);
+    expect(reviewedMeaning.reviewCount, 1);
+    expect(reviewedMeaning.nextReviewAt!.isAfter(originalReviewDate), isTrue);
+    expect(
+      (await database.getMeaning(otherMeaning.id))?.nextReviewAt,
+      otherReviewDate,
+    );
 
-    await database.recordReviewAttempt(
-      reviewedWord,
+    await database.recordMeaningReview(
+      reviewedMeaning,
       remembered: false,
       reviewedAt: DateTime(2026, 7, 18),
     );
-    final forgottenWord = (await database.watchAllWords().first).single;
+    final forgottenMeaning = (await database.getMeaning(originalMeaning.id))!;
 
-    expect(forgottenWord.reviewCount, 0);
+    expect(forgottenMeaning.reviewCount, 0);
     expect(
-      forgottenWord.nextReviewAt!.isBefore(reviewedWord.nextReviewAt!),
+      forgottenMeaning.nextReviewAt!.isBefore(reviewedMeaning.nextReviewAt!),
       isTrue,
     );
 
@@ -136,6 +150,7 @@ void main() {
     expect(history.first.word, 'ephemeral');
     expect(history.first.remembered, isFalse);
     expect(history.first.reviewCount, 0);
+    expect(history.first.meaningId, originalMeaning.id);
     expect(history.last.remembered, isTrue);
     expect(history.last.reviewCount, 1);
   });
