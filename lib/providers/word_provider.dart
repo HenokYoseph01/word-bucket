@@ -442,6 +442,15 @@ class WordNotifier extends StateNotifier<LookupState> {
     return result;
   }
 
+  void selectSense(int index) {
+    final result = state.result;
+    if (result == null || index < 0 || index >= result.senses.length) return;
+    state = LookupState(
+      result: result.withSense(result.senses[index]),
+      existingWord: state.existingWord,
+    );
+  }
+
   Future<void> deleteWord(String word) async {
     await _database.deleteWord(word);
     await syncHomeWidget();

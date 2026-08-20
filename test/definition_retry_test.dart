@@ -93,6 +93,44 @@ void main() {
     expect(notifier.state.result?.definition, 'Emitting light.');
     expect(notifier.state.error, isNull);
   });
+
+  test('selects the intended meaning before saving', () async {
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+    final dictionary = _FakeDictionaryService([
+      WordModel(
+        word: 'pen',
+        partOfSpeech: 'noun',
+        definition: 'A small enclosure for animals.',
+        savedAt: DateTime(2026, 8, 19),
+        senses: const [
+          WordSense(
+            partOfSpeech: 'noun',
+            definition: 'A small enclosure for animals.',
+          ),
+          WordSense(
+            partOfSpeech: 'noun',
+            definition: 'An instrument used for writing with ink.',
+          ),
+        ],
+      ),
+    ]);
+    final notifier = WordNotifier(
+      dictionary,
+      database,
+      HomeWidgetService(),
+      retryDelay: Duration.zero,
+    );
+
+    await notifier.lookUp('pen');
+    notifier.selectSense(1);
+
+    expect(
+      notifier.state.result?.definition,
+      'An instrument used for writing with ink.',
+    );
+    expect(notifier.state.result?.senses, hasLength(2));
+  });
 }
 
 class _FakeDictionaryService extends DictionaryService {

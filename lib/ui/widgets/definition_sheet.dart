@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/models/word_model.dart';
 import '../../providers/word_provider.dart';
 import 'part_of_speech_badge.dart';
 
@@ -248,37 +249,72 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
           ),
           const SizedBox(height: 16),
         ],
-        PartOfSpeechBadge(label: word.partOfSpeech),
-        const SizedBox(height: 16),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: colors.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: colors.outlineVariant),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        if (word.senses.length > 1) ...[
+          Row(
             children: [
               Text(
-                'DEFINITION',
+                'CHOOSE THE MEANING',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: colors.primary,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.2,
                 ),
               ),
-              const SizedBox(height: 9),
+              const Spacer(),
               Text(
-                word.definition,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(height: 1.5),
+                '${word.senses.length} meanings',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 10),
+          for (var index = 0; index < word.senses.length; index++) ...[
+            _MeaningChoice(
+              number: index + 1,
+              sense: word.senses[index],
+              selected:
+                  word.partOfSpeech == word.senses[index].partOfSpeech &&
+                  word.definition == word.senses[index].definition,
+              onTap: () =>
+                  ref.read(wordNotifierProvider.notifier).selectSense(index),
+            ),
+            if (index != word.senses.length - 1) const SizedBox(height: 9),
+          ],
+        ] else ...[
+          PartOfSpeechBadge(label: word.partOfSpeech),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: colors.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: colors.outlineVariant),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'DEFINITION',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: colors.primary,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 9),
+                Text(
+                  word.definition,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(height: 1.5),
+                ),
+              ],
+            ),
+          ),
+        ],
         if (word.exampleSentence != null) ...[
           const SizedBox(height: 12),
           Container(
@@ -381,5 +417,86 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
       'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+}
+
+class _MeaningChoice extends StatelessWidget {
+  const _MeaningChoice({
+    required this.number,
+    required this.sense,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final int number;
+  final WordSense sense;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Material(
+      color: selected
+          ? colors.primaryContainer.withValues(alpha: 0.65)
+          : colors.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(
+          color: selected ? colors.primary : colors.outlineVariant,
+          width: selected ? 2 : 1,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(15),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 28,
+                height: 28,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: selected
+                      ? colors.primary
+                      : colors.surfaceContainerHigh,
+                ),
+                child: selected
+                    ? Icon(
+                        Icons.check_rounded,
+                        size: 17,
+                        color: colors.onPrimary,
+                      )
+                    : Text(
+                        '$number',
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    PartOfSpeechBadge(label: sense.partOfSpeech),
+                    const SizedBox(height: 8),
+                    Text(
+                      sense.definition,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyLarge?.copyWith(height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

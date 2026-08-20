@@ -48,33 +48,23 @@ class DictionaryService {
       }
 
       final entry = entries.first as Map<String, dynamic>;
-      final meanings = entry['meanings'] as List<dynamic>?;
-      if (meanings == null || meanings.isEmpty) {
+      final senses = _readSenses(entries);
+      if (senses.isEmpty) {
         throw DictionaryException(
           'No definition found for "$normalizedWord".',
           kind: DictionaryFailure.notFound,
         );
       }
-
-      final meaning = meanings.first as Map<String, dynamic>;
-      final definitions = meaning['definitions'] as List<dynamic>?;
-      if (definitions == null || definitions.isEmpty) {
-        throw DictionaryException(
-          'No definition found for "$normalizedWord".',
-          kind: DictionaryFailure.notFound,
-        );
-      }
-
-      final definition = definitions.first as Map<String, dynamic>;
+      final selected = senses.first;
 
       return WordModel(
         word: entry['word'] as String? ?? normalizedWord,
         phonetic: _readPhonetic(entry),
-        partOfSpeech: meaning['partOfSpeech'] as String? ?? 'unknown',
-        definition:
-            definition['definition'] as String? ?? 'No definition available.',
-        exampleSentence: definition['example'] as String?,
+        partOfSpeech: selected.partOfSpeech,
+        definition: selected.definition,
+        exampleSentence: selected.exampleSentence,
         savedAt: DateTime.now(),
+        senses: senses,
       );
     } on DioException catch (error) {
       if (error.response?.statusCode == 404) {
@@ -165,16 +155,20 @@ class DictionaryService {
         );
       }
 
-      final rawDefinition = definitions.first as String;
-      final separator = rawDefinition.indexOf('\t');
-      final rawPartOfSpeech = separator == -1
-          ? 'unknown'
-          : rawDefinition.substring(0, separator);
-      final definition =
-          (separator == -1
-                  ? rawDefinition
-                  : rawDefinition.substring(separator + 1))
-              .trim();
+      final senses = definitions
+          .whereType<String>()
+          .map(_readFallbackSense)
+          .where((sense) => sense.definition.isNotEmpty)
+          .toSetBy((sense) => '${sense.partOfSpeech}|${sense.definition}')
+          .take(8)
+          .toList(growable: false);
+      if (senses.isEmpty) {
+        throw DictionaryException(
+          'No definition found for "$normalizedWord".',
+          kind: DictionaryFailure.notFound,
+        );
+      }
+      final selected = senses.first;
       final tags = (entry['tags'] as List<dynamic>?)?.whereType<String>();
       final phonetic = _readFallbackPhonetic(tags);
 
@@ -183,9 +177,10 @@ class DictionaryService {
         // (for example, "feeling" for "feelings").
         word: normalizedWord,
         phonetic: phonetic,
-        partOfSpeech: _expandPartOfSpeech(rawPartOfSpeech),
-        definition: definition,
+        partOfSpeech: selected.partOfSpeech,
+        definition: selected.definition,
         savedAt: DateTime.now(),
+        senses: senses,
       );
     } on DioException {
       throw const DictionaryException(
@@ -228,6 +223,51 @@ class DictionaryService {
     _ => value,
   };
 
+  List<WordSense> _readSenses(List<dynamic> entries) {
+    final senses = <WordSense>[];
+    final seen = <String>{};
+    for (final rawEntry in entries.whereType<Map<String, dynamic>>()) {
+      final meanings = rawEntry['meanings'] as List<dynamic>? ?? const [];
+      for (final rawMeaning in meanings.whereType<Map<String, dynamic>>()) {
+        final partOfSpeech = rawMeaning['partOfSpeech'] as String? ?? 'unknown';
+        final definitions =
+            rawMeaning['definitions'] as List<dynamic>? ?? const [];
+        for (final rawDefinition
+            in definitions.whereType<Map<String, dynamic>>()) {
+          final definition = (rawDefinition['definition'] as String?)?.trim();
+          if (definition == null || definition.isEmpty) continue;
+          final key =
+              '${partOfSpeech.toLowerCase()}|${definition.toLowerCase()}';
+          if (!seen.add(key)) continue;
+          senses.add(
+            WordSense(
+              partOfSpeech: partOfSpeech,
+              definition: definition,
+              exampleSentence: rawDefinition['example'] as String?,
+            ),
+          );
+          if (senses.length == 8) return senses;
+        }
+      }
+    }
+    return senses;
+  }
+
+  WordSense _readFallbackSense(String rawDefinition) {
+    final separator = rawDefinition.indexOf('\t');
+    final rawPartOfSpeech = separator == -1
+        ? 'unknown'
+        : rawDefinition.substring(0, separator);
+    return WordSense(
+      partOfSpeech: _expandPartOfSpeech(rawPartOfSpeech),
+      definition:
+          (separator == -1
+                  ? rawDefinition
+                  : rawDefinition.substring(separator + 1))
+              .trim(),
+    );
+  }
+
   String? _readPhonetic(Map<String, dynamic> entry) {
     final directPhonetic = entry['phonetic'] as String?;
     if (directPhonetic != null && directPhonetic.isNotEmpty) {
@@ -242,6 +282,15 @@ class DictionaryService {
       if (phonetic != null && phonetic.isNotEmpty) return phonetic;
     }
     return null;
+  }
+}
+
+extension<T> on Iterable<T> {
+  Iterable<T> toSetBy(Object Function(T value) keyOf) sync* {
+    final keys = <Object>{};
+    for (final value in this) {
+      if (keys.add(keyOf(value))) yield value;
+    }
   }
 }
 
