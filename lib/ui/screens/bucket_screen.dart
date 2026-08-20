@@ -384,11 +384,14 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
               return Dismissible(
                 key: ValueKey(savedWord.word),
                 direction: DismissDirection.endToStart,
-                onDismissed: (_) {
-                  ref
-                      .read(wordNotifierProvider.notifier)
-                      .deleteWord(savedWord.word);
-                },
+                confirmDismiss: (_) => _confirmWordRemoval(
+                  savedWord,
+                  meanings
+                          ?.where((meaning) => meaning.word == savedWord.word)
+                          .length ??
+                      1,
+                ),
+                onDismissed: (_) => _removeWord(savedWord),
                 background: Container(
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.only(right: 24),
@@ -405,12 +408,163 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
                           ?.where((meaning) => meaning.word == savedWord.word)
                           .toList(growable: false) ??
                       const [],
+                  onDeleteWord: () async {
+                    final count =
+                        meanings
+                            ?.where((meaning) => meaning.word == savedWord.word)
+                            .length ??
+                        1;
+                    if (await _confirmWordRemoval(savedWord, count)) {
+                      await _removeWord(savedWord);
+                    }
+                  },
+                  onDeleteMeaning: (meaning) =>
+                      _confirmAndRemoveMeaning(savedWord, meaning),
                 ),
               );
             },
           );
         },
       ),
+    );
+  }
+
+  Future<bool> _confirmWordRemoval(SavedWord word, int meaningCount) async {
+    return await _showRemovalConfirmation(
+          icon: Icons.delete_forever_outlined,
+          title: 'Remove “${word.word}”?',
+          message: meaningCount > 1
+              ? 'This removes the word and all $meaningCount saved meanings from your bucket.'
+              : 'This removes the word and its saved meaning from your bucket.',
+          actionLabel: 'Remove word',
+        ) ??
+        false;
+  }
+
+  Future<void> _confirmAndRemoveMeaning(
+    SavedWord word,
+    SavedMeaning meaning,
+  ) async {
+    final confirmed = await _showRemovalConfirmation(
+      icon: Icons.delete_outline_rounded,
+      title: 'Remove this meaning?',
+      message: '“${meaning.definition}” will be removed from ${word.word}.',
+      actionLabel: 'Remove meaning',
+    );
+    if (confirmed != true || !mounted) return;
+    final snapshot = await ref
+        .read(wordNotifierProvider.notifier)
+        .deleteMeaningWithUndo(word.word, meaning.id);
+    if (!mounted || snapshot == null) return;
+    _showUndo(
+      message: snapshot.meanings.length == 1
+          ? '“${word.word}” removed from your bucket.'
+          : 'Meaning removed from “${word.word}”.',
+      snapshot: snapshot,
+    );
+  }
+
+  Future<void> _removeWord(SavedWord word) async {
+    final snapshot = await ref
+        .read(wordNotifierProvider.notifier)
+        .deleteWordWithUndo(word.word);
+    if (!mounted || snapshot == null) return;
+    _showUndo(
+      message: '“${word.word}” removed from your bucket.',
+      snapshot: snapshot,
+    );
+  }
+
+  void _showUndo({
+    required String message,
+    required DeletedWordSnapshot snapshot,
+  }) {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            ref
+                .read(wordNotifierProvider.notifier)
+                .restoreDeletedWord(snapshot);
+          },
+        ),
+      ),
+    );
+  }
+
+  Future<bool?> _showRemovalConfirmation({
+    required IconData icon,
+    required String title,
+    required String message,
+    required String actionLabel,
+  }) {
+    return showModalBottomSheet<bool>(
+      context: context,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final colors = Theme.of(sheetContext).colorScheme;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(22, 4, 22, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  color: colors.errorContainer,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(icon, color: colors.onErrorContainer),
+              ),
+              const SizedBox(height: 15),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  sheetContext,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: Theme.of(sheetContext).textTheme.bodyLarge?.copyWith(
+                  color: colors.onSurfaceVariant,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 22),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(sheetContext, false),
+                      child: const Text('Keep it'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: colors.error,
+                        foregroundColor: colors.onError,
+                      ),
+                      onPressed: () => Navigator.pop(sheetContext, true),
+                      child: Text(actionLabel),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

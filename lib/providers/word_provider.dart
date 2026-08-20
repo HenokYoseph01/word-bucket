@@ -493,6 +493,26 @@ class WordNotifier extends StateNotifier<LookupState> {
     await syncHomeWidget();
   }
 
+  Future<DeletedWordSnapshot?> deleteWordWithUndo(String word) async {
+    final snapshot = await _database.deleteWordWithSnapshot(word);
+    if (snapshot != null) await syncHomeWidget();
+    return snapshot;
+  }
+
+  Future<DeletedWordSnapshot?> deleteMeaningWithUndo(
+    String word,
+    int meaningId,
+  ) async {
+    final snapshot = await _database.deleteMeaningWithSnapshot(word, meaningId);
+    if (snapshot != null) await syncHomeWidget();
+    return snapshot;
+  }
+
+  Future<void> restoreDeletedWord(DeletedWordSnapshot snapshot) async {
+    await _database.restoreDeletedWord(snapshot);
+    await syncHomeWidget();
+  }
+
   Future<void> syncHomeWidget() {
     return _homeWidget.syncFromDatabase(_database);
   }

@@ -9,12 +9,16 @@ class WordCard extends StatefulWidget {
     required this.word,
     this.meanings = const [],
     this.onSave,
+    this.onDeleteWord,
+    this.onDeleteMeaning,
     super.key,
   });
 
   final WordModel word;
   final List<SavedMeaning> meanings;
   final VoidCallback? onSave;
+  final VoidCallback? onDeleteWord;
+  final ValueChanged<SavedMeaning>? onDeleteMeaning;
 
   @override
   State<WordCard> createState() => _WordCardState();
@@ -56,6 +60,16 @@ class _WordCardState extends State<WordCard>
                       ),
                     ),
                   const SizedBox(width: 6),
+                  if (widget.onDeleteWord != null)
+                    IconButton(
+                      tooltip: 'Remove ${widget.word.word}',
+                      visualDensity: VisualDensity.compact,
+                      onPressed: widget.onDeleteWord,
+                      icon: Icon(
+                        Icons.delete_outline_rounded,
+                        color: colors.error,
+                      ),
+                    ),
                   AnimatedRotation(
                     turns: _expanded ? .5 : 0,
                     duration: const Duration(milliseconds: 220),
@@ -138,6 +152,9 @@ class _WordCardState extends State<WordCard>
       definition: meaning.definition,
       example: meaning.exampleSentence,
       savedAt: meaning.savedAt,
+      onDelete: widget.onDeleteMeaning == null
+          ? null
+          : () => widget.onDeleteMeaning!(meaning),
     );
   }
 
@@ -148,6 +165,7 @@ class _WordCardState extends State<WordCard>
       definition: widget.word.definition,
       example: widget.word.exampleSentence,
       savedAt: widget.word.savedAt,
+      onDelete: widget.onDeleteWord,
     );
   }
 
@@ -157,6 +175,7 @@ class _WordCardState extends State<WordCard>
     required String definition,
     required String? example,
     required DateTime savedAt,
+    required VoidCallback? onDelete,
   }) {
     final colors = Theme.of(context).colorScheme;
     return Container(
@@ -180,6 +199,19 @@ class _WordCardState extends State<WordCard>
                   color: colors.onSurfaceVariant,
                 ),
               ),
+              if (onDelete != null) ...[
+                const SizedBox(width: 4),
+                IconButton(
+                  tooltip: 'Remove this meaning',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: onDelete,
+                  icon: Icon(
+                    Icons.delete_outline_rounded,
+                    size: 20,
+                    color: colors.error,
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 10),

@@ -3,6 +3,13 @@ import 'package:drift/drift.dart';
 import '../models/word_model.dart';
 import 'database.dart';
 
+class DeletedWordSnapshot {
+  const DeletedWordSnapshot({required this.word, required this.meanings});
+
+  final SavedWord word;
+  final List<SavedMeaning> meanings;
+}
+
 extension WordDao on AppDatabase {
   Future<void> saveWord(WordModel model) => saveMeaning(model);
 
@@ -56,6 +63,71 @@ extension WordDao on AppDatabase {
         savedMeanings,
       )..where((meaning) => meaning.word.equals(text))).go();
       await (delete(words)..where((word) => word.word.equals(text))).go();
+    });
+  }
+
+  Future<DeletedWordSnapshot?> deleteWordWithSnapshot(String text) async {
+    final word = await getWord(text);
+    if (word == null) return null;
+    final snapshot = DeletedWordSnapshot(
+      word: word,
+      meanings: await getMeanings(text),
+    );
+    await deleteWord(text);
+    return snapshot;
+  }
+
+  Future<DeletedWordSnapshot?> deleteMeaningWithSnapshot(
+    String text,
+    int meaningId,
+  ) async {
+    final word = await getWord(text);
+    if (word == null) return null;
+    final allMeanings = await getMeanings(text);
+    if (!allMeanings.any((meaning) => meaning.id == meaningId)) return null;
+    final snapshot = DeletedWordSnapshot(word: word, meanings: allMeanings);
+
+    await transaction(() async {
+      await (delete(
+        savedMeanings,
+      )..where((meaning) => meaning.id.equals(meaningId))).go();
+      final remaining = allMeanings
+          .where((meaning) => meaning.id != meaningId)
+          .toList(growable: false);
+      if (remaining.isEmpty) {
+        await (delete(words)..where((row) => row.word.equals(text))).go();
+        return;
+      }
+      final replacement = remaining.first;
+      if (_sameStoredDefinition(
+        word.definition,
+        snapshot.meanings
+            .firstWhere((meaning) => meaning.id == meaningId)
+            .definition,
+      )) {
+        await (update(words)..where((row) => row.word.equals(text))).write(
+          WordsCompanion(
+            partOfSpeech: Value(replacement.partOfSpeech),
+            definition: Value(replacement.definition),
+            exampleSentence: Value(replacement.exampleSentence),
+            savedAt: Value(replacement.savedAt),
+            reviewCount: Value(replacement.reviewCount),
+            nextReviewAt: Value(replacement.nextReviewAt),
+          ),
+        );
+      }
+    });
+    return snapshot;
+  }
+
+  Future<void> restoreDeletedWord(DeletedWordSnapshot snapshot) {
+    return transaction(() async {
+      await into(words).insertOnConflictUpdate(snapshot.word);
+      for (final meaning in snapshot.meanings) {
+        await into(
+          savedMeanings,
+        ).insert(meaning, mode: InsertMode.insertOrIgnore);
+      }
     });
   }
 
@@ -166,6 +238,10 @@ extension WordDao on AppDatabase {
     )..orderBy([(attempt) => OrderingTerm.desc(attempt.reviewedAt)])).get();
   }
 }
+
+bool _sameStoredDefinition(String first, String second) =>
+    first.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase() ==
+    second.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
 
 extension SavedWordModel on SavedWord {
   WordModel toModel() {

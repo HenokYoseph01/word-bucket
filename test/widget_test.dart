@@ -86,6 +86,25 @@ void main() {
         savedAt: DateTime(2026, 7, 18),
       ),
     );
+    final twoMeanings = await database.getMeanings('ephemeral');
+    expect(twoMeanings, hasLength(2));
+    final meaningSnapshot = await database.deleteMeaningWithSnapshot(
+      'ephemeral',
+      twoMeanings.first.id,
+    );
+    expect(await database.getMeanings('ephemeral'), hasLength(1));
+    expect(
+      (await database.getWord('ephemeral'))?.definition,
+      'Something that lasts only briefly.',
+    );
+    await database.restoreDeletedWord(meaningSnapshot!);
+    expect(await database.getMeanings('ephemeral'), hasLength(2));
+
+    final wordSnapshot = await database.deleteWordWithSnapshot('ephemeral');
+    expect(await database.getWord('ephemeral'), isNull);
+    expect(await database.getMeanings('ephemeral'), isEmpty);
+    await database.restoreDeletedWord(wordSnapshot!);
+    expect(await database.getWord('ephemeral'), isNotNull);
     expect(await database.getMeanings('ephemeral'), hasLength(2));
 
     final originalReviewDate = words.single.nextReviewAt!;
