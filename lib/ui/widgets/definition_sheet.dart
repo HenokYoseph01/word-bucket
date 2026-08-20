@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/database/database.dart';
 import '../../data/models/word_model.dart';
 import '../../providers/word_provider.dart';
 import 'part_of_speech_badge.dart';
@@ -169,6 +170,7 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
     final lookup = ref.watch(wordNotifierProvider);
     final word = lookup.result!;
     final existingWord = lookup.existingWord;
+    final selectedSavedMeaning = lookup.selectedSavedMeaning;
     final colors = Theme.of(context).colorScheme;
 
     return Column(
@@ -236,8 +238,9 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
                 const SizedBox(width: 11),
                 Expanded(
                   child: Text(
-                    'Already in your bucket · saved '
-                    '${_formatSavedDate(existingWord.savedAt)}',
+                    '${lookup.savedMeanings.length} saved '
+                    '${lookup.savedMeanings.length == 1 ? 'meaning' : 'meanings'} '
+                    'in your bucket',
                     style: TextStyle(
                       color: colors.onTertiaryContainer,
                       fontWeight: FontWeight.w700,
@@ -277,6 +280,7 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
               selected:
                   word.partOfSpeech == word.senses[index].partOfSpeech &&
                   word.definition == word.senses[index].definition,
+              savedAt: _savedAtFor(word.senses[index], lookup.savedMeanings),
               onTap: () =>
                   ref.read(wordNotifierProvider.notifier).selectSense(index),
             ),
@@ -347,13 +351,15 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
           ),
         ],
         const SizedBox(height: 22),
-        if (existingWord != null)
+        if (selectedSavedMeaning != null)
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
               onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.check_rounded),
-              label: const Text('Got it'),
+              label: Text(
+                'Already saved · ${_formatSavedDate(selectedSavedMeaning.savedAt)}',
+              ),
             ),
           )
         else
@@ -380,7 +386,13 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
                           ),
                         )
                       : const Icon(Icons.bookmark_add_rounded),
-                  label: Text(_isSaving ? 'Saving…' : 'Save to Bucket'),
+                  label: Text(
+                    _isSaving
+                        ? 'Saving…'
+                        : existingWord != null
+                        ? 'Add this meaning'
+                        : 'Save to Bucket',
+                  ),
                 ),
               ),
             ],
@@ -418,6 +430,19 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
+
+  DateTime? _savedAtFor(WordSense sense, List<SavedMeaning> savedMeanings) {
+    final normalized = _normalizeDefinition(sense.definition);
+    for (final saved in savedMeanings) {
+      if (_normalizeDefinition(saved.definition) == normalized) {
+        return saved.savedAt;
+      }
+    }
+    return null;
+  }
+
+  String _normalizeDefinition(String definition) =>
+      definition.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
 }
 
 class _MeaningChoice extends StatelessWidget {
@@ -425,12 +450,14 @@ class _MeaningChoice extends StatelessWidget {
     required this.number,
     required this.sense,
     required this.selected,
+    required this.savedAt,
     required this.onTap,
   });
 
   final int number;
   final WordSense sense;
   final bool selected;
+  final DateTime? savedAt;
   final VoidCallback onTap;
 
   @override
@@ -490,6 +517,27 @@ class _MeaningChoice extends StatelessWidget {
                         context,
                       ).textTheme.bodyLarge?.copyWith(height: 1.4),
                     ),
+                    if (savedAt != null) ...[
+                      const SizedBox(height: 9),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.bookmark_added_rounded,
+                            size: 16,
+                            color: colors.primary,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            'Saved ${_shortDate(savedAt!)}',
+                            style: Theme.of(context).textTheme.labelMedium
+                                ?.copyWith(
+                                  color: colors.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -498,5 +546,23 @@ class _MeaningChoice extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _shortDate(DateTime date) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 }

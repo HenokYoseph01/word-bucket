@@ -905,16 +905,549 @@ class ReviewAttemptsCompanion extends UpdateCompanion<ReviewAttempt> {
   }
 }
 
+class $SavedMeaningsTable extends SavedMeanings
+    with TableInfo<$SavedMeaningsTable, SavedMeaning> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SavedMeaningsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _wordMeta = const VerificationMeta('word');
+  @override
+  late final GeneratedColumn<String> word = GeneratedColumn<String>(
+    'word',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _partOfSpeechMeta = const VerificationMeta(
+    'partOfSpeech',
+  );
+  @override
+  late final GeneratedColumn<String> partOfSpeech = GeneratedColumn<String>(
+    'part_of_speech',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _definitionMeta = const VerificationMeta(
+    'definition',
+  );
+  @override
+  late final GeneratedColumn<String> definition = GeneratedColumn<String>(
+    'definition',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _exampleSentenceMeta = const VerificationMeta(
+    'exampleSentence',
+  );
+  @override
+  late final GeneratedColumn<String> exampleSentence = GeneratedColumn<String>(
+    'example_sentence',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _savedAtMeta = const VerificationMeta(
+    'savedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> savedAt = GeneratedColumn<DateTime>(
+    'saved_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _reviewCountMeta = const VerificationMeta(
+    'reviewCount',
+  );
+  @override
+  late final GeneratedColumn<int> reviewCount = GeneratedColumn<int>(
+    'review_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _nextReviewAtMeta = const VerificationMeta(
+    'nextReviewAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> nextReviewAt = GeneratedColumn<DateTime>(
+    'next_review_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    word,
+    partOfSpeech,
+    definition,
+    exampleSentence,
+    savedAt,
+    reviewCount,
+    nextReviewAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'saved_meanings';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SavedMeaning> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('word')) {
+      context.handle(
+        _wordMeta,
+        word.isAcceptableOrUnknown(data['word']!, _wordMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_wordMeta);
+    }
+    if (data.containsKey('part_of_speech')) {
+      context.handle(
+        _partOfSpeechMeta,
+        partOfSpeech.isAcceptableOrUnknown(
+          data['part_of_speech']!,
+          _partOfSpeechMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_partOfSpeechMeta);
+    }
+    if (data.containsKey('definition')) {
+      context.handle(
+        _definitionMeta,
+        definition.isAcceptableOrUnknown(data['definition']!, _definitionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_definitionMeta);
+    }
+    if (data.containsKey('example_sentence')) {
+      context.handle(
+        _exampleSentenceMeta,
+        exampleSentence.isAcceptableOrUnknown(
+          data['example_sentence']!,
+          _exampleSentenceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('saved_at')) {
+      context.handle(
+        _savedAtMeta,
+        savedAt.isAcceptableOrUnknown(data['saved_at']!, _savedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_savedAtMeta);
+    }
+    if (data.containsKey('review_count')) {
+      context.handle(
+        _reviewCountMeta,
+        reviewCount.isAcceptableOrUnknown(
+          data['review_count']!,
+          _reviewCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('next_review_at')) {
+      context.handle(
+        _nextReviewAtMeta,
+        nextReviewAt.isAcceptableOrUnknown(
+          data['next_review_at']!,
+          _nextReviewAtMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {word, definition},
+  ];
+  @override
+  SavedMeaning map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SavedMeaning(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      word: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}word'],
+      )!,
+      partOfSpeech: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}part_of_speech'],
+      )!,
+      definition: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}definition'],
+      )!,
+      exampleSentence: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}example_sentence'],
+      ),
+      savedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}saved_at'],
+      )!,
+      reviewCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}review_count'],
+      )!,
+      nextReviewAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}next_review_at'],
+      ),
+    );
+  }
+
+  @override
+  $SavedMeaningsTable createAlias(String alias) {
+    return $SavedMeaningsTable(attachedDatabase, alias);
+  }
+}
+
+class SavedMeaning extends DataClass implements Insertable<SavedMeaning> {
+  final int id;
+  final String word;
+  final String partOfSpeech;
+  final String definition;
+  final String? exampleSentence;
+  final DateTime savedAt;
+  final int reviewCount;
+  final DateTime? nextReviewAt;
+  const SavedMeaning({
+    required this.id,
+    required this.word,
+    required this.partOfSpeech,
+    required this.definition,
+    this.exampleSentence,
+    required this.savedAt,
+    required this.reviewCount,
+    this.nextReviewAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['word'] = Variable<String>(word);
+    map['part_of_speech'] = Variable<String>(partOfSpeech);
+    map['definition'] = Variable<String>(definition);
+    if (!nullToAbsent || exampleSentence != null) {
+      map['example_sentence'] = Variable<String>(exampleSentence);
+    }
+    map['saved_at'] = Variable<DateTime>(savedAt);
+    map['review_count'] = Variable<int>(reviewCount);
+    if (!nullToAbsent || nextReviewAt != null) {
+      map['next_review_at'] = Variable<DateTime>(nextReviewAt);
+    }
+    return map;
+  }
+
+  SavedMeaningsCompanion toCompanion(bool nullToAbsent) {
+    return SavedMeaningsCompanion(
+      id: Value(id),
+      word: Value(word),
+      partOfSpeech: Value(partOfSpeech),
+      definition: Value(definition),
+      exampleSentence: exampleSentence == null && nullToAbsent
+          ? const Value.absent()
+          : Value(exampleSentence),
+      savedAt: Value(savedAt),
+      reviewCount: Value(reviewCount),
+      nextReviewAt: nextReviewAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextReviewAt),
+    );
+  }
+
+  factory SavedMeaning.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SavedMeaning(
+      id: serializer.fromJson<int>(json['id']),
+      word: serializer.fromJson<String>(json['word']),
+      partOfSpeech: serializer.fromJson<String>(json['partOfSpeech']),
+      definition: serializer.fromJson<String>(json['definition']),
+      exampleSentence: serializer.fromJson<String?>(json['exampleSentence']),
+      savedAt: serializer.fromJson<DateTime>(json['savedAt']),
+      reviewCount: serializer.fromJson<int>(json['reviewCount']),
+      nextReviewAt: serializer.fromJson<DateTime?>(json['nextReviewAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'word': serializer.toJson<String>(word),
+      'partOfSpeech': serializer.toJson<String>(partOfSpeech),
+      'definition': serializer.toJson<String>(definition),
+      'exampleSentence': serializer.toJson<String?>(exampleSentence),
+      'savedAt': serializer.toJson<DateTime>(savedAt),
+      'reviewCount': serializer.toJson<int>(reviewCount),
+      'nextReviewAt': serializer.toJson<DateTime?>(nextReviewAt),
+    };
+  }
+
+  SavedMeaning copyWith({
+    int? id,
+    String? word,
+    String? partOfSpeech,
+    String? definition,
+    Value<String?> exampleSentence = const Value.absent(),
+    DateTime? savedAt,
+    int? reviewCount,
+    Value<DateTime?> nextReviewAt = const Value.absent(),
+  }) => SavedMeaning(
+    id: id ?? this.id,
+    word: word ?? this.word,
+    partOfSpeech: partOfSpeech ?? this.partOfSpeech,
+    definition: definition ?? this.definition,
+    exampleSentence: exampleSentence.present
+        ? exampleSentence.value
+        : this.exampleSentence,
+    savedAt: savedAt ?? this.savedAt,
+    reviewCount: reviewCount ?? this.reviewCount,
+    nextReviewAt: nextReviewAt.present ? nextReviewAt.value : this.nextReviewAt,
+  );
+  SavedMeaning copyWithCompanion(SavedMeaningsCompanion data) {
+    return SavedMeaning(
+      id: data.id.present ? data.id.value : this.id,
+      word: data.word.present ? data.word.value : this.word,
+      partOfSpeech: data.partOfSpeech.present
+          ? data.partOfSpeech.value
+          : this.partOfSpeech,
+      definition: data.definition.present
+          ? data.definition.value
+          : this.definition,
+      exampleSentence: data.exampleSentence.present
+          ? data.exampleSentence.value
+          : this.exampleSentence,
+      savedAt: data.savedAt.present ? data.savedAt.value : this.savedAt,
+      reviewCount: data.reviewCount.present
+          ? data.reviewCount.value
+          : this.reviewCount,
+      nextReviewAt: data.nextReviewAt.present
+          ? data.nextReviewAt.value
+          : this.nextReviewAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SavedMeaning(')
+          ..write('id: $id, ')
+          ..write('word: $word, ')
+          ..write('partOfSpeech: $partOfSpeech, ')
+          ..write('definition: $definition, ')
+          ..write('exampleSentence: $exampleSentence, ')
+          ..write('savedAt: $savedAt, ')
+          ..write('reviewCount: $reviewCount, ')
+          ..write('nextReviewAt: $nextReviewAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    word,
+    partOfSpeech,
+    definition,
+    exampleSentence,
+    savedAt,
+    reviewCount,
+    nextReviewAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SavedMeaning &&
+          other.id == this.id &&
+          other.word == this.word &&
+          other.partOfSpeech == this.partOfSpeech &&
+          other.definition == this.definition &&
+          other.exampleSentence == this.exampleSentence &&
+          other.savedAt == this.savedAt &&
+          other.reviewCount == this.reviewCount &&
+          other.nextReviewAt == this.nextReviewAt);
+}
+
+class SavedMeaningsCompanion extends UpdateCompanion<SavedMeaning> {
+  final Value<int> id;
+  final Value<String> word;
+  final Value<String> partOfSpeech;
+  final Value<String> definition;
+  final Value<String?> exampleSentence;
+  final Value<DateTime> savedAt;
+  final Value<int> reviewCount;
+  final Value<DateTime?> nextReviewAt;
+  const SavedMeaningsCompanion({
+    this.id = const Value.absent(),
+    this.word = const Value.absent(),
+    this.partOfSpeech = const Value.absent(),
+    this.definition = const Value.absent(),
+    this.exampleSentence = const Value.absent(),
+    this.savedAt = const Value.absent(),
+    this.reviewCount = const Value.absent(),
+    this.nextReviewAt = const Value.absent(),
+  });
+  SavedMeaningsCompanion.insert({
+    this.id = const Value.absent(),
+    required String word,
+    required String partOfSpeech,
+    required String definition,
+    this.exampleSentence = const Value.absent(),
+    required DateTime savedAt,
+    this.reviewCount = const Value.absent(),
+    this.nextReviewAt = const Value.absent(),
+  }) : word = Value(word),
+       partOfSpeech = Value(partOfSpeech),
+       definition = Value(definition),
+       savedAt = Value(savedAt);
+  static Insertable<SavedMeaning> custom({
+    Expression<int>? id,
+    Expression<String>? word,
+    Expression<String>? partOfSpeech,
+    Expression<String>? definition,
+    Expression<String>? exampleSentence,
+    Expression<DateTime>? savedAt,
+    Expression<int>? reviewCount,
+    Expression<DateTime>? nextReviewAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (word != null) 'word': word,
+      if (partOfSpeech != null) 'part_of_speech': partOfSpeech,
+      if (definition != null) 'definition': definition,
+      if (exampleSentence != null) 'example_sentence': exampleSentence,
+      if (savedAt != null) 'saved_at': savedAt,
+      if (reviewCount != null) 'review_count': reviewCount,
+      if (nextReviewAt != null) 'next_review_at': nextReviewAt,
+    });
+  }
+
+  SavedMeaningsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? word,
+    Value<String>? partOfSpeech,
+    Value<String>? definition,
+    Value<String?>? exampleSentence,
+    Value<DateTime>? savedAt,
+    Value<int>? reviewCount,
+    Value<DateTime?>? nextReviewAt,
+  }) {
+    return SavedMeaningsCompanion(
+      id: id ?? this.id,
+      word: word ?? this.word,
+      partOfSpeech: partOfSpeech ?? this.partOfSpeech,
+      definition: definition ?? this.definition,
+      exampleSentence: exampleSentence ?? this.exampleSentence,
+      savedAt: savedAt ?? this.savedAt,
+      reviewCount: reviewCount ?? this.reviewCount,
+      nextReviewAt: nextReviewAt ?? this.nextReviewAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (word.present) {
+      map['word'] = Variable<String>(word.value);
+    }
+    if (partOfSpeech.present) {
+      map['part_of_speech'] = Variable<String>(partOfSpeech.value);
+    }
+    if (definition.present) {
+      map['definition'] = Variable<String>(definition.value);
+    }
+    if (exampleSentence.present) {
+      map['example_sentence'] = Variable<String>(exampleSentence.value);
+    }
+    if (savedAt.present) {
+      map['saved_at'] = Variable<DateTime>(savedAt.value);
+    }
+    if (reviewCount.present) {
+      map['review_count'] = Variable<int>(reviewCount.value);
+    }
+    if (nextReviewAt.present) {
+      map['next_review_at'] = Variable<DateTime>(nextReviewAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SavedMeaningsCompanion(')
+          ..write('id: $id, ')
+          ..write('word: $word, ')
+          ..write('partOfSpeech: $partOfSpeech, ')
+          ..write('definition: $definition, ')
+          ..write('exampleSentence: $exampleSentence, ')
+          ..write('savedAt: $savedAt, ')
+          ..write('reviewCount: $reviewCount, ')
+          ..write('nextReviewAt: $nextReviewAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $WordsTable words = $WordsTable(this);
   late final $ReviewAttemptsTable reviewAttempts = $ReviewAttemptsTable(this);
+  late final $SavedMeaningsTable savedMeanings = $SavedMeaningsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [words, reviewAttempts];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    words,
+    reviewAttempts,
+    savedMeanings,
+  ];
 }
 
 typedef $$WordsTableCreateCompanionBuilder =
@@ -1379,6 +1912,267 @@ typedef $$ReviewAttemptsTableProcessedTableManager =
       ReviewAttempt,
       PrefetchHooks Function()
     >;
+typedef $$SavedMeaningsTableCreateCompanionBuilder =
+    SavedMeaningsCompanion Function({
+      Value<int> id,
+      required String word,
+      required String partOfSpeech,
+      required String definition,
+      Value<String?> exampleSentence,
+      required DateTime savedAt,
+      Value<int> reviewCount,
+      Value<DateTime?> nextReviewAt,
+    });
+typedef $$SavedMeaningsTableUpdateCompanionBuilder =
+    SavedMeaningsCompanion Function({
+      Value<int> id,
+      Value<String> word,
+      Value<String> partOfSpeech,
+      Value<String> definition,
+      Value<String?> exampleSentence,
+      Value<DateTime> savedAt,
+      Value<int> reviewCount,
+      Value<DateTime?> nextReviewAt,
+    });
+
+class $$SavedMeaningsTableFilterComposer
+    extends Composer<_$AppDatabase, $SavedMeaningsTable> {
+  $$SavedMeaningsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get word => $composableBuilder(
+    column: $table.word,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get partOfSpeech => $composableBuilder(
+    column: $table.partOfSpeech,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get definition => $composableBuilder(
+    column: $table.definition,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get exampleSentence => $composableBuilder(
+    column: $table.exampleSentence,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get savedAt => $composableBuilder(
+    column: $table.savedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get reviewCount => $composableBuilder(
+    column: $table.reviewCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get nextReviewAt => $composableBuilder(
+    column: $table.nextReviewAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SavedMeaningsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SavedMeaningsTable> {
+  $$SavedMeaningsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get word => $composableBuilder(
+    column: $table.word,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get partOfSpeech => $composableBuilder(
+    column: $table.partOfSpeech,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get definition => $composableBuilder(
+    column: $table.definition,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get exampleSentence => $composableBuilder(
+    column: $table.exampleSentence,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get savedAt => $composableBuilder(
+    column: $table.savedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get reviewCount => $composableBuilder(
+    column: $table.reviewCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get nextReviewAt => $composableBuilder(
+    column: $table.nextReviewAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SavedMeaningsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SavedMeaningsTable> {
+  $$SavedMeaningsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get word =>
+      $composableBuilder(column: $table.word, builder: (column) => column);
+
+  GeneratedColumn<String> get partOfSpeech => $composableBuilder(
+    column: $table.partOfSpeech,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get definition => $composableBuilder(
+    column: $table.definition,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get exampleSentence => $composableBuilder(
+    column: $table.exampleSentence,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get savedAt =>
+      $composableBuilder(column: $table.savedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get reviewCount => $composableBuilder(
+    column: $table.reviewCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get nextReviewAt => $composableBuilder(
+    column: $table.nextReviewAt,
+    builder: (column) => column,
+  );
+}
+
+class $$SavedMeaningsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SavedMeaningsTable,
+          SavedMeaning,
+          $$SavedMeaningsTableFilterComposer,
+          $$SavedMeaningsTableOrderingComposer,
+          $$SavedMeaningsTableAnnotationComposer,
+          $$SavedMeaningsTableCreateCompanionBuilder,
+          $$SavedMeaningsTableUpdateCompanionBuilder,
+          (
+            SavedMeaning,
+            BaseReferences<_$AppDatabase, $SavedMeaningsTable, SavedMeaning>,
+          ),
+          SavedMeaning,
+          PrefetchHooks Function()
+        > {
+  $$SavedMeaningsTableTableManager(_$AppDatabase db, $SavedMeaningsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SavedMeaningsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SavedMeaningsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SavedMeaningsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> word = const Value.absent(),
+                Value<String> partOfSpeech = const Value.absent(),
+                Value<String> definition = const Value.absent(),
+                Value<String?> exampleSentence = const Value.absent(),
+                Value<DateTime> savedAt = const Value.absent(),
+                Value<int> reviewCount = const Value.absent(),
+                Value<DateTime?> nextReviewAt = const Value.absent(),
+              }) => SavedMeaningsCompanion(
+                id: id,
+                word: word,
+                partOfSpeech: partOfSpeech,
+                definition: definition,
+                exampleSentence: exampleSentence,
+                savedAt: savedAt,
+                reviewCount: reviewCount,
+                nextReviewAt: nextReviewAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String word,
+                required String partOfSpeech,
+                required String definition,
+                Value<String?> exampleSentence = const Value.absent(),
+                required DateTime savedAt,
+                Value<int> reviewCount = const Value.absent(),
+                Value<DateTime?> nextReviewAt = const Value.absent(),
+              }) => SavedMeaningsCompanion.insert(
+                id: id,
+                word: word,
+                partOfSpeech: partOfSpeech,
+                definition: definition,
+                exampleSentence: exampleSentence,
+                savedAt: savedAt,
+                reviewCount: reviewCount,
+                nextReviewAt: nextReviewAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SavedMeaningsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SavedMeaningsTable,
+      SavedMeaning,
+      $$SavedMeaningsTableFilterComposer,
+      $$SavedMeaningsTableOrderingComposer,
+      $$SavedMeaningsTableAnnotationComposer,
+      $$SavedMeaningsTableCreateCompanionBuilder,
+      $$SavedMeaningsTableUpdateCompanionBuilder,
+      (
+        SavedMeaning,
+        BaseReferences<_$AppDatabase, $SavedMeaningsTable, SavedMeaning>,
+      ),
+      SavedMeaning,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -1387,4 +2181,6 @@ class $AppDatabaseManager {
       $$WordsTableTableManager(_db, _db.words);
   $$ReviewAttemptsTableTableManager get reviewAttempts =>
       $$ReviewAttemptsTableTableManager(_db, _db.reviewAttempts);
+  $$SavedMeaningsTableTableManager get savedMeanings =>
+      $$SavedMeaningsTableTableManager(_db, _db.savedMeanings);
 }

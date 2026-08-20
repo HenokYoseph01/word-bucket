@@ -1,88 +1,224 @@
 import 'package:flutter/material.dart';
 
+import '../../data/database/database.dart';
 import '../../data/models/word_model.dart';
 import 'part_of_speech_badge.dart';
 
-class WordCard extends StatelessWidget {
-  const WordCard({required this.word, this.onSave, super.key});
+class WordCard extends StatefulWidget {
+  const WordCard({
+    required this.word,
+    this.meanings = const [],
+    this.onSave,
+    super.key,
+  });
 
   final WordModel word;
+  final List<SavedMeaning> meanings;
   final VoidCallback? onSave;
 
   @override
+  State<WordCard> createState() => _WordCardState();
+}
+
+class _WordCardState extends State<WordCard>
+    with SingleTickerProviderStateMixin {
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final count = widget.meanings.isEmpty ? 1 : widget.meanings.length;
     return Card(
       margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    word.word,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => setState(() => _expanded = !_expanded),
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.word.word,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                if (word.phonetic != null)
+                  if (widget.word.phonetic != null)
+                    Text(
+                      widget.word.phonetic!,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  const SizedBox(width: 6),
+                  AnimatedRotation(
+                    turns: _expanded ? .5 : 0,
+                    duration: const Duration(milliseconds: 220),
+                    child: const Icon(Icons.keyboard_arrow_down_rounded),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(
+                    Icons.bookmarks_rounded,
+                    size: 17,
+                    color: colors.tertiary,
+                  ),
+                  const SizedBox(width: 6),
                   Text(
-                    word.phonetic!,
+                    '$count saved ${count == 1 ? 'meaning' : 'meanings'}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      color: colors.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                PartOfSpeechBadge(label: word.partOfSpeech),
-                const Spacer(),
-                Icon(
-                  Icons.bookmark_rounded,
-                  size: 19,
-                  color: Theme.of(context).colorScheme.tertiary,
+                  const Spacer(),
+                  Text(
+                    _expanded ? 'Hide definitions' : 'Show definitions',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: colors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              AnimatedSize(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeInOutCubic,
+                child: _expanded
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Column(
+                          children: widget.meanings.isEmpty
+                              ? [_legacyMeaning(context)]
+                              : [
+                                  for (
+                                    var index = 0;
+                                    index < widget.meanings.length;
+                                    index++
+                                  ) ...[
+                                    _meaning(context, widget.meanings[index]),
+                                    if (index != widget.meanings.length - 1)
+                                      const SizedBox(height: 10),
+                                  ],
+                                ],
+                        ),
+                      )
+                    : const SizedBox(width: double.infinity),
+              ),
+              if (widget.onSave != null && _expanded) ...[
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: widget.onSave,
+                    icon: const Icon(Icons.bookmark_add_outlined),
+                    label: const Text('Save to Bucket'),
+                  ),
                 ),
               ],
-            ),
-            const SizedBox(height: 14),
-            Text(
-              word.definition,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                height: 1.45,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            if (word.exampleSentence != null) ...[
-              const SizedBox(height: 10),
-              Text(
-                '“${word.exampleSentence!}”',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
             ],
-            if (onSave != null) ...[
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: onSave,
-                  icon: const Icon(Icons.bookmark_add_outlined),
-                  label: const Text('Save to Bucket'),
-                ),
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  Widget _meaning(BuildContext context, SavedMeaning meaning) {
+    return _meaningSurface(
+      context,
+      partOfSpeech: meaning.partOfSpeech,
+      definition: meaning.definition,
+      example: meaning.exampleSentence,
+      savedAt: meaning.savedAt,
+    );
+  }
+
+  Widget _legacyMeaning(BuildContext context) {
+    return _meaningSurface(
+      context,
+      partOfSpeech: widget.word.partOfSpeech,
+      definition: widget.word.definition,
+      example: widget.word.exampleSentence,
+      savedAt: widget.word.savedAt,
+    );
+  }
+
+  Widget _meaningSurface(
+    BuildContext context, {
+    required String partOfSpeech,
+    required String definition,
+    required String? example,
+    required DateTime savedAt,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: colors.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              PartOfSpeechBadge(label: partOfSpeech),
+              const Spacer(),
+              Text(
+                'Saved ${_date(savedAt)}',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            definition,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(height: 1.45),
+          ),
+          if (example != null) ...[
+            const SizedBox(height: 9),
+            Text(
+              '“$example”',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: colors.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _date(DateTime value) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[value.month - 1]} ${value.day}, ${value.year}';
   }
 }

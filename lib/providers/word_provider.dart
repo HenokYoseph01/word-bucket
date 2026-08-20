@@ -36,6 +36,10 @@ final savedWordsProvider = StreamProvider<List<SavedWord>>((ref) {
   return ref.watch(databaseProvider).watchAllWords();
 });
 
+final savedMeaningsProvider = StreamProvider<List<SavedMeaning>>((ref) {
+  return ref.watch(databaseProvider).watchAllMeanings();
+});
+
 final dueWordsProvider = FutureProvider<List<SavedWord>>((ref) {
   return ref.watch(databaseProvider).getWordsDueForReview();
 });
@@ -334,6 +338,7 @@ class LookupState {
     this.error,
     this.canRetry = false,
     this.existingWord,
+    this.savedMeanings = const [],
   });
 
   final bool isLoading;
@@ -342,7 +347,23 @@ class LookupState {
   final String? error;
   final bool canRetry;
   final SavedWord? existingWord;
+  final List<SavedMeaning> savedMeanings;
+
+  SavedMeaning? get selectedSavedMeaning {
+    final selected = result;
+    if (selected == null) return null;
+    for (final meaning in savedMeanings) {
+      if (_sameDefinition(meaning.definition, selected.definition)) {
+        return meaning;
+      }
+    }
+    return null;
+  }
 }
+
+bool _sameDefinition(String first, String second) =>
+    first.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase() ==
+    second.trim().replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
 
 class WordNotifier extends StateNotifier<LookupState> {
   WordNotifier(
@@ -366,21 +387,21 @@ class WordNotifier extends StateNotifier<LookupState> {
     state = const LookupState(isLoading: true);
     try {
       final existingWord = await _database.getWord(normalizedWord);
+      final savedMeanings = existingWord == null
+          ? const <SavedMeaning>[]
+          : await _database.getMeanings(normalizedWord);
       if (request != _lookupGeneration) return;
-      if (existingWord != null) {
-        state = LookupState(
-          result: existingWord.toModel(),
-          existingWord: existingWord,
-        );
-        return;
-      }
 
       DictionaryException? primaryError;
       for (var attempt = 0; attempt < 2; attempt++) {
         try {
           final result = await _dictionary.define(normalizedWord);
           if (request == _lookupGeneration) {
-            state = LookupState(result: result);
+            state = LookupState(
+              result: _includeSavedSenses(result, savedMeanings),
+              existingWord: existingWord,
+              savedMeanings: savedMeanings,
+            );
           }
           return;
         } on DictionaryException catch (error) {
@@ -401,14 +422,28 @@ class WordNotifier extends StateNotifier<LookupState> {
         try {
           final result = await _dictionary.defineFallback(normalizedWord);
           if (request == _lookupGeneration) {
-            state = LookupState(result: result);
+            state = LookupState(
+              result: _includeSavedSenses(result, savedMeanings),
+              existingWord: existingWord,
+              savedMeanings: savedMeanings,
+            );
           }
         } on DictionaryException catch (fallbackError) {
           if (request == _lookupGeneration) {
-            state = LookupState(
-              error: primaryError.message,
-              canRetry: primaryError.isRetryable || fallbackError.isRetryable,
-            );
+            state = existingWord == null
+                ? LookupState(
+                    error: primaryError.message,
+                    canRetry:
+                        primaryError.isRetryable || fallbackError.isRetryable,
+                  )
+                : LookupState(
+                    result: _includeSavedSenses(
+                      existingWord.toModel(),
+                      savedMeanings,
+                    ),
+                    existingWord: existingWord,
+                    savedMeanings: savedMeanings,
+                  );
           }
         }
       }
@@ -435,8 +470,9 @@ class WordNotifier extends StateNotifier<LookupState> {
   Future<WordModel?> saveCurrentWord() async {
     final result = state.result;
     if (result == null) return null;
+    if (state.selectedSavedMeaning != null) return null;
 
-    await _database.saveWord(result);
+    await _database.saveMeaning(result);
     await _homeWidget.syncFromDatabase(_database, preferredWord: result.word);
     state = const LookupState();
     return result;
@@ -448,6 +484,7 @@ class WordNotifier extends StateNotifier<LookupState> {
     state = LookupState(
       result: result.withSense(result.senses[index]),
       existingWord: state.existingWord,
+      savedMeanings: state.savedMeanings,
     );
   }
 
@@ -468,6 +505,43 @@ class WordNotifier extends StateNotifier<LookupState> {
     _lookupGeneration++;
     _lastLookup = null;
     state = const LookupState();
+  }
+
+  WordModel _includeSavedSenses(
+    WordModel result,
+    List<SavedMeaning> savedMeanings,
+  ) {
+    if (savedMeanings.isEmpty) return result;
+    final senses = [...result.senses];
+    for (final saved in savedMeanings) {
+      if (senses.any(
+        (sense) => _sameDefinition(sense.definition, saved.definition),
+      )) {
+        continue;
+      }
+      senses.add(
+        WordSense(
+          partOfSpeech: saved.partOfSpeech,
+          definition: saved.definition,
+          exampleSentence: saved.exampleSentence,
+        ),
+      );
+    }
+    final selected = senses.firstWhere(
+      (sense) => _sameDefinition(sense.definition, result.definition),
+      orElse: () => senses.first,
+    );
+    return WordModel(
+      word: result.word,
+      phonetic: result.phonetic,
+      partOfSpeech: selected.partOfSpeech,
+      definition: selected.definition,
+      exampleSentence: selected.exampleSentence,
+      savedAt: result.savedAt,
+      reviewCount: result.reviewCount,
+      nextReviewAt: result.nextReviewAt,
+      senses: senses,
+    );
   }
 }
 

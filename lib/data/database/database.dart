@@ -27,7 +27,24 @@ class ReviewAttempts extends Table {
   IntColumn get reviewCount => integer()();
 }
 
-@DriftDatabase(tables: [Words, ReviewAttempts])
+@DataClassName('SavedMeaning')
+class SavedMeanings extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get word => text()();
+  TextColumn get partOfSpeech => text()();
+  TextColumn get definition => text()();
+  TextColumn get exampleSentence => text().nullable()();
+  DateTimeColumn get savedAt => dateTime()();
+  IntColumn get reviewCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get nextReviewAt => dateTime().nullable()();
+
+  @override
+  List<Set<Column<Object>>> get uniqueKeys => [
+    {word, definition},
+  ];
+}
+
+@DriftDatabase(tables: [Words, ReviewAttempts, SavedMeanings])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
     : super(
@@ -39,7 +56,7 @@ class AppDatabase extends _$AppDatabase {
       );
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
@@ -48,6 +65,17 @@ class AppDatabase extends _$AppDatabase {
       onUpgrade: (migrator, from, to) async {
         if (from < 2) {
           await migrator.createTable(reviewAttempts);
+        }
+        if (from < 3) {
+          await migrator.createTable(savedMeanings);
+          await customStatement('''
+            INSERT OR IGNORE INTO saved_meanings
+              (word, part_of_speech, definition, example_sentence, saved_at,
+               review_count, next_review_at)
+            SELECT word, part_of_speech, definition, example_sentence, saved_at,
+                   review_count, next_review_at
+            FROM words
+          ''');
         }
       },
     );

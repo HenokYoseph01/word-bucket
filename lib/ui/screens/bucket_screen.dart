@@ -45,15 +45,18 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       ref.invalidate(savedWordsProvider);
+      ref.invalidate(savedMeaningsProvider);
       ref.invalidate(dueWordsProvider);
     }
   }
 
   Future<void> _refreshWords() async {
     ref.invalidate(savedWordsProvider);
+    ref.invalidate(savedMeaningsProvider);
     ref.invalidate(dueWordsProvider);
     await Future.wait([
       ref.read(savedWordsProvider.future),
+      ref.read(savedMeaningsProvider.future),
       ref.read(dueWordsProvider.future),
     ]);
   }
@@ -114,6 +117,7 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
   Widget build(BuildContext context) {
     final wordsAsync = ref.watch(savedWordsProvider);
     final words = wordsAsync.valueOrNull ?? const <SavedWord>[];
+    final meanings = ref.watch(savedMeaningsProvider).valueOrNull;
     final dueWordsAsync = ref.watch(dueWordsProvider);
     final statistics = ref.watch(reviewStatisticsProvider).valueOrNull;
 
@@ -141,7 +145,7 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
                 _buildProgressStrip(statistics),
               ],
               const SizedBox(height: 16),
-              Expanded(child: _buildSavedWords(wordsAsync)),
+              Expanded(child: _buildSavedWords(wordsAsync, meanings)),
             ],
           ),
         ),
@@ -349,7 +353,10 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     );
   }
 
-  Widget _buildSavedWords(AsyncValue<List<SavedWord>> wordsAsync) {
+  Widget _buildSavedWords(
+    AsyncValue<List<SavedWord>> wordsAsync,
+    List<SavedMeaning>? meanings,
+  ) {
     return RefreshIndicator(
       onRefresh: _refreshWords,
       child: wordsAsync.when(
@@ -391,7 +398,14 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
                   ),
                   child: const Icon(Icons.delete_outline, color: Colors.white),
                 ),
-                child: WordCard(word: savedWord.toModel()),
+                child: WordCard(
+                  word: savedWord.toModel(),
+                  meanings:
+                      meanings
+                          ?.where((meaning) => meaning.word == savedWord.word)
+                          .toList(growable: false) ??
+                      const [],
+                ),
               );
             },
           );

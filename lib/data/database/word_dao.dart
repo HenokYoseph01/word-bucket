@@ -4,21 +4,38 @@ import '../models/word_model.dart';
 import 'database.dart';
 
 extension WordDao on AppDatabase {
-  Future<void> saveWord(WordModel model) {
-    return into(words).insertOnConflictUpdate(
-      WordsCompanion.insert(
-        word: model.word,
-        phonetic: Value(model.phonetic),
-        partOfSpeech: model.partOfSpeech,
-        definition: model.definition,
-        exampleSentence: Value(model.exampleSentence),
-        savedAt: model.savedAt,
-        reviewCount: Value(model.reviewCount),
-        nextReviewAt: Value(
-          model.nextReviewAt ?? DateTime.now().add(const Duration(days: 1)),
+  Future<void> saveWord(WordModel model) => saveMeaning(model);
+
+  Future<void> saveMeaning(WordModel model) {
+    final nextReviewAt =
+        model.nextReviewAt ?? DateTime.now().add(const Duration(days: 1));
+    return transaction(() async {
+      await into(words).insert(
+        WordsCompanion.insert(
+          word: model.word,
+          phonetic: Value(model.phonetic),
+          partOfSpeech: model.partOfSpeech,
+          definition: model.definition,
+          exampleSentence: Value(model.exampleSentence),
+          savedAt: model.savedAt,
+          reviewCount: Value(model.reviewCount),
+          nextReviewAt: Value(nextReviewAt),
         ),
-      ),
-    );
+        mode: InsertMode.insertOrIgnore,
+      );
+      await into(savedMeanings).insert(
+        SavedMeaningsCompanion.insert(
+          word: model.word,
+          partOfSpeech: model.partOfSpeech,
+          definition: model.definition,
+          exampleSentence: Value(model.exampleSentence),
+          savedAt: model.savedAt,
+          reviewCount: Value(model.reviewCount),
+          nextReviewAt: Value(nextReviewAt),
+        ),
+        mode: InsertMode.insertOrIgnore,
+      );
+    });
   }
 
   Stream<List<SavedWord>> watchAllWords() {
@@ -34,13 +51,31 @@ extension WordDao on AppDatabase {
   }
 
   Future<void> deleteWord(String text) {
-    return (delete(words)..where((word) => word.word.equals(text))).go();
+    return transaction(() async {
+      await (delete(
+        savedMeanings,
+      )..where((meaning) => meaning.word.equals(text))).go();
+      await (delete(words)..where((word) => word.word.equals(text))).go();
+    });
   }
 
   Future<SavedWord?> getWord(String text) {
     return (select(
       words,
     )..where((word) => word.word.equals(text))).getSingleOrNull();
+  }
+
+  Future<List<SavedMeaning>> getMeanings(String text) {
+    return (select(savedMeanings)
+          ..where((meaning) => meaning.word.equals(text))
+          ..orderBy([(meaning) => OrderingTerm.asc(meaning.savedAt)]))
+        .get();
+  }
+
+  Stream<List<SavedMeaning>> watchAllMeanings() {
+    return (select(
+      savedMeanings,
+    )..orderBy([(meaning) => OrderingTerm.asc(meaning.savedAt)])).watch();
   }
 
   Future<SavedWord?> getRandomWord({String? excluding}) {
