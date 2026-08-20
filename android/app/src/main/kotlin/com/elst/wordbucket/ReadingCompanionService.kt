@@ -42,8 +42,15 @@ class ReadingCompanionService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (!Settings.canDrawOverlays(this)) {
+            stopSelf()
+            return START_NOT_STICKY
+        }
         when (intent?.action) {
-            ACTION_STOP -> stopSelf()
+            ACTION_STOP -> {
+                stopSelf()
+                return START_NOT_STICKY
+            }
             ACTION_UPDATE_COLOR -> updateColor(intent.getIntExtra(EXTRA_COLOR, defaultColor()))
         }
         return START_STICKY

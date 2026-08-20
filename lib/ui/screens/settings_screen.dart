@@ -16,32 +16,168 @@ class SettingsScreen extends ConsumerStatefulWidget {
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen>
+    with WidgetsBindingObserver {
   static const _quickTileChannel = MethodChannel(quickTileChannelName);
+  static const _companionChannel = MethodChannel(readingCompanionChannelName);
 
   bool _daily = false;
   bool _streak = true;
   bool _loading = true;
   bool _updating = false;
   bool _addingQuickTile = false;
+  bool _companionActive = false;
+  bool _companionUpdating = false;
+  bool _startCompanionAfterPermission = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    if (_startCompanionAfterPermission) {
+      _finishCompanionPermissionRequest();
+    } else {
+      _refreshCompanionStatus();
+    }
   }
 
   Future<void> _load() async {
     final values = await Future.wait([
       areReviewRemindersEnabled(),
       areStreakRemindersEnabled(),
+      _readCompanionStatus(),
     ]);
     if (!mounted) return;
     setState(() {
       _daily = values[0];
       _streak = values[1];
+      _companionActive = values[2];
       _loading = false;
     });
+  }
+
+  Future<bool> _readCompanionStatus() async {
+    try {
+      return await _companionChannel.invokeMethod<bool>(
+            'isReadingCompanionActive',
+          ) ??
+          false;
+    } on MissingPluginException {
+      return false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
+  Future<void> _refreshCompanionStatus() async {
+    final active = await _readCompanionStatus();
+    if (mounted) setState(() => _companionActive = active);
+  }
+
+  Future<void> _setReadingCompanion(bool enabled) async {
+    if (_companionUpdating) return;
+    setState(() => _companionUpdating = true);
+    try {
+      if (!enabled) {
+        await _companionChannel.invokeMethod<void>('stopReadingCompanion');
+        if (mounted) setState(() => _companionActive = false);
+        return;
+      }
+
+      final hasPermission =
+          await _companionChannel.invokeMethod<bool>('hasOverlayPermission') ??
+          false;
+      if (!hasPermission) {
+        final continueToSettings = await _explainOverlayPermission();
+        if (continueToSettings != true || !mounted) return;
+        _startCompanionAfterPermission = true;
+        await _companionChannel.invokeMethod<void>('requestOverlayPermission');
+        return;
+      }
+      await _startReadingCompanion();
+    } on MissingPluginException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Reading Companion is available on Android.'),
+        ),
+      );
+    } on PlatformException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message ?? 'Could not start companion.')),
+      );
+    } finally {
+      if (mounted) setState(() => _companionUpdating = false);
+    }
+  }
+
+  Future<void> _finishCompanionPermissionRequest() async {
+    _startCompanionAfterPermission = false;
+    final granted =
+        await _companionChannel.invokeMethod<bool>('hasOverlayPermission') ??
+        false;
+    if (!mounted) return;
+    if (granted) {
+      await _startReadingCompanion();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Display-over-apps permission was not enabled. You can try again anytime.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _startReadingCompanion() async {
+    final palette = ref.read(themePaletteProvider);
+    await _companionChannel.invokeMethod<bool>('startReadingCompanion', {
+      'color': palette.seed.toARGB32(),
+    });
+    if (!mounted) return;
+    setState(() => _companionActive = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Reading Companion is ready. Copy a word, then tap it.'),
+      ),
+    );
+  }
+
+  Future<bool?> _explainOverlayPermission() {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.auto_stories_rounded),
+        title: const Text('Allow the reading bubble?'),
+        content: const Text(
+          'Android calls this “Display over other apps.” WordBucket uses it only to show a small draggable book while you read. Clipboard text is read only when you tap the bubble.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Not now'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Open settings'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _setReminder({
@@ -143,6 +279,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final disabled = _loading || _updating;
     final themeMode = ref.watch(themeModeProvider);
     final palette = ref.watch(themePaletteProvider);
+    ref.listen<AppPalette>(themePaletteProvider, (previous, next) {
+      if (!_companionActive) return;
+      _companionChannel.invokeMethod<void>('updateReadingCompanionColor', {
+        'color': next.seed.toARGB32(),
+      });
+    });
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings'), centerTitle: true),
@@ -275,6 +417,45 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             const SizedBox(height: 28),
             const _SectionLabel(
+              icon: Icons.auto_stories_rounded,
+              title: 'Reading Companion',
+              subtitle: 'Keep Bucketify nearby without leaving your book.',
+            ),
+            const SizedBox(height: 10),
+            Card(
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
+                  _ReminderTile(
+                    icon: Icons.bubble_chart_rounded,
+                    title: 'Start reading',
+                    description:
+                        'Show a draggable bubble. Copy a word and tap the bubble to define it.',
+                    value: _companionActive,
+                    enabled: !_companionUpdating,
+                    onChanged: _setReadingCompanion,
+                  ),
+                  const Divider(height: 1, indent: 76),
+                  const ListTile(
+                    leading: Icon(Icons.privacy_tip_outlined),
+                    title: Text('Private by design'),
+                    subtitle: Text(
+                      'The companion does not monitor everything you copy. It reads the clipboard only after you tap it.',
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 76),
+                  const ListTile(
+                    leading: Icon(Icons.open_with_rounded),
+                    title: Text('Move it or dismiss it'),
+                    subtitle: Text(
+                      'Drag it to either edge, or drag it onto the remove target at the bottom to stop.',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 28),
+            const _SectionLabel(
               icon: Icons.help_outline_rounded,
               title: 'Help',
               subtitle: 'A quick refresher whenever you need it.',
@@ -287,7 +468,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ListTile(
                     leading: const Icon(Icons.auto_stories_rounded),
                     title: const Text('How to use WordBucket'),
-                    subtitle: const Text('Replay the six-step introduction.'),
+                    subtitle: const Text('Replay the seven-step introduction.'),
                     trailing: const Icon(Icons.arrow_forward_rounded),
                     onTap: () => Navigator.of(context).push<void>(
                       MaterialPageRoute(

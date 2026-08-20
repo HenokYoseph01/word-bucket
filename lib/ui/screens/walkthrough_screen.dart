@@ -22,6 +22,15 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
           'Can’t see it? Tap More or ⋮ first. If the app only offers Copy, the next step has you covered.',
     ),
     _WalkthroughPage(
+      icon: Icons.bubble_chart_rounded,
+      eyebrow: 'READING COMPANION',
+      title: 'Keep Bucketify close by',
+      description:
+          'In Settings, start Reading Companion and allow its floating book. Copy a word while reading, then tap the book to define it.',
+      note:
+          'Drag it to either edge, or onto the bottom remove target to stop. WordBucket reads the clipboard only when you tap.',
+    ),
+    _WalkthroughPage(
       icon: Icons.dashboard_customize_rounded,
       eyebrow: 'QUICK BUCKETIFY',
       title: 'When an app only offers Copy',
