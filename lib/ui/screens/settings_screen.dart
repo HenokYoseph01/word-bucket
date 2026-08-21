@@ -9,6 +9,7 @@ import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/word_provider.dart';
+import 'palette_gallery_screen.dart';
 import 'walkthrough_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -348,48 +349,45 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             ),
             const SizedBox(height: 12),
             Card(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Paper palette',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+              clipBehavior: Clip.antiAlias,
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                leading: _PaletteStack(palette: palette),
+                title: const Text(
+                  'Paper palette',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+                subtitle: Text('${palette.label} · ${palette.collectionLabel}'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => Navigator.of(context).push(
+                  PageRouteBuilder<void>(
+                    transitionDuration: const Duration(milliseconds: 420),
+                    reverseTransitionDuration: const Duration(
+                      milliseconds: 360,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Every palette includes a matching dark version.',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final width = (constraints.maxWidth - 10) / 2;
-                        return Wrap(
-                          spacing: 10,
-                          runSpacing: 10,
-                          children: [
-                            for (final option in AppPalette.values)
-                              SizedBox(
-                                width: width,
-                                child: _PaletteOption(
-                                  palette: option,
-                                  selected: palette == option,
-                                  onTap: () => ref
-                                      .read(themePaletteProvider.notifier)
-                                      .setPalette(option),
-                                ),
-                              ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
+                    pageBuilder: (_, animation, secondaryAnimation) =>
+                        const PaletteGalleryScreen(),
+                    transitionsBuilder: (_, animation, secondary, child) {
+                      final curved = CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                        reverseCurve: Curves.easeInCubic,
+                      );
+                      return FadeTransition(
+                        opacity: curved,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0.08, 0),
+                            end: Offset.zero,
+                          ).animate(curved),
+                          child: child,
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
@@ -606,77 +604,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   ];
 }
 
-class _PaletteOption extends StatelessWidget {
-  const _PaletteOption({
-    required this.palette,
-    required this.selected,
-    required this.onTap,
-  });
+class _PaletteStack extends StatelessWidget {
+  const _PaletteStack({required this.palette});
 
   final AppPalette palette;
-  final bool selected;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Semantics(
-      selected: selected,
-      button: true,
-      label: '${palette.label} palette',
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          padding: const EdgeInsets.all(11),
-          decoration: BoxDecoration(
-            color: selected
-                ? colors.primaryContainer
-                : colors.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: selected ? colors.primary : colors.outlineVariant,
-              width: selected ? 2 : 1,
+    return SizedBox(
+      width: 50,
+      height: 38,
+      child: Stack(
+        alignment: Alignment.centerLeft,
+        children: [
+          for (var index = 0; index < 3; index++)
+            Positioned(
+              left: index * 11,
+              child: _PaletteSwatch(color: palette.previewColors[index]),
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  _PaletteSwatch(color: palette.lightPaper),
-                  Transform.translate(
-                    offset: const Offset(-5, 0),
-                    child: _PaletteSwatch(color: palette.seed),
-                  ),
-                  Transform.translate(
-                    offset: const Offset(-10, 0),
-                    child: _PaletteSwatch(color: palette.accent),
-                  ),
-                  const Spacer(),
-                  if (selected)
-                    Icon(
-                      Icons.check_circle_rounded,
-                      color: colors.onPrimaryContainer,
-                    ),
-                ],
-              ),
-              const SizedBox(height: 9),
-              Text(
-                palette.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: selected
-                      ? colors.onPrimaryContainer
-                      : colors.onSurface,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }

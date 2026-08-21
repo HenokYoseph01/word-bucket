@@ -9,6 +9,10 @@ enum AppPalette {
   monochromePaper,
   rosePetal,
   matchaHoney,
+  lilacEvening,
+  cherryInk,
+  pressedFlowers,
+  moonlitLagoon,
 }
 
 extension AppPaletteDetails on AppPalette {
@@ -21,6 +25,10 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.monochromePaper => 'Monochrome Paper',
     AppPalette.rosePetal => 'Rose Petal',
     AppPalette.matchaHoney => 'Matcha & Honey',
+    AppPalette.lilacEvening => 'Lilac Evening',
+    AppPalette.cherryInk => 'Cherry Ink',
+    AppPalette.pressedFlowers => 'Pressed Flowers',
+    AppPalette.moonlitLagoon => 'Moonlit Lagoon',
   };
 
   Color get seed => switch (this) {
@@ -32,6 +40,10 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.monochromePaper => const Color(0xFF111111),
     AppPalette.rosePetal => const Color(0xFFA75A7A),
     AppPalette.matchaHoney => const Color(0xFF9CA764),
+    AppPalette.lilacEvening => const Color(0xFF4D3E6B),
+    AppPalette.cherryInk => const Color(0xFF8F2040),
+    AppPalette.pressedFlowers => const Color(0xFF473469),
+    AppPalette.moonlitLagoon => const Color(0xFF294380),
   };
 
   Color get accent => switch (this) {
@@ -43,6 +55,10 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.monochromePaper => const Color(0xFF777777),
     AppPalette.rosePetal => const Color(0xFFE7A5B8),
     AppPalette.matchaHoney => const Color(0xFFF1E8C7),
+    AppPalette.lilacEvening => const Color(0xFF8DAEC3),
+    AppPalette.cherryInk => const Color(0xFFD78391),
+    AppPalette.pressedFlowers => const Color(0xFFF79EB1),
+    AppPalette.moonlitLagoon => const Color(0xFF69D2CD),
   };
 
   Color get lightPaper => switch (this) {
@@ -54,6 +70,10 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.monochromePaper => const Color(0xFFFFFFFF),
     AppPalette.rosePetal => const Color(0xFFFFF5F8),
     AppPalette.matchaHoney => const Color(0xFFFCFAEF),
+    AppPalette.lilacEvening => const Color(0xFFFCFCE2),
+    AppPalette.cherryInk => const Color(0xFFFFF8F3),
+    AppPalette.pressedFlowers => const Color(0xFFF2E7D2),
+    AppPalette.moonlitLagoon => const Color(0xFFF1F6CE),
   };
 
   Color get darkPaper => switch (this) {
@@ -65,6 +85,88 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.monochromePaper => const Color(0xFF000000),
     AppPalette.rosePetal => const Color(0xFF21151B),
     AppPalette.matchaHoney => const Color(0xFF1B1D13),
+    AppPalette.lilacEvening => const Color(0xFF211A2B),
+    AppPalette.cherryInk => const Color(0xFF211218),
+    AppPalette.pressedFlowers => const Color(0xFF1E1725),
+    AppPalette.moonlitLagoon => const Color(0xFF0D0F36),
+  };
+
+  List<Color> get previewColors => switch (this) {
+    AppPalette.classicInk => const [
+      Color(0xFFFFFBF3),
+      Color(0xFF203A43),
+      Color(0xFFF4C95D),
+    ],
+    AppPalette.forestJournal => const [
+      Color(0xFFFBF8ED),
+      Color(0xFF315B45),
+      Color(0xFFC79A45),
+    ],
+    AppPalette.sepiaLibrary => const [
+      Color(0xFFFFF5DF),
+      Color(0xFF6B4932),
+      Color(0xFFB7793F),
+    ],
+    AppPalette.plumNotebook => const [
+      Color(0xFFFFF7FA),
+      Color(0xFF65445F),
+      Color(0xFFD09A5B),
+    ],
+    AppPalette.midnightBlue => const [
+      Color(0xFFF6F8FC),
+      Color(0xFF354B6B),
+      Color(0xFF8FAED1),
+    ],
+    AppPalette.monochromePaper => const [
+      Color(0xFFFFFFFF),
+      Color(0xFF111111),
+      Color(0xFF777777),
+    ],
+    AppPalette.rosePetal => const [
+      Color(0xFFFFF5F8),
+      Color(0xFFA75A7A),
+      Color(0xFFE7A5B8),
+    ],
+    AppPalette.matchaHoney => const [
+      Color(0xFFF1E8C7),
+      Color(0xFF9CA764),
+      Color(0xFFFCFAEF),
+    ],
+    AppPalette.lilacEvening => const [
+      Color(0xFF81749C),
+      Color(0xFF4D3E6B),
+      Color(0xFF8DAEC3),
+      Color(0xFFC5DFE0),
+      Color(0xFFFCFCE2),
+    ],
+    AppPalette.cherryInk => const [
+      Color(0xFFFFF8F3),
+      Color(0xFFF0CDD2),
+      Color(0xFFD78391),
+      Color(0xFF8F2040),
+      Color(0xFF211218),
+    ],
+    AppPalette.pressedFlowers => const [
+      Color(0xFFF2E7D2),
+      Color(0xFFF79EB1),
+      Color(0xFFAE8FBA),
+      Color(0xFF4C5E91),
+      Color(0xFF473469),
+    ],
+    AppPalette.moonlitLagoon => const [
+      Color(0xFF0D0F36),
+      Color(0xFF294380),
+      Color(0xFF69D2CD),
+      Color(0xFFB9F1D6),
+      Color(0xFFF1F6CE),
+    ],
+  };
+
+  String get collectionLabel => switch (this) {
+    AppPalette.lilacEvening ||
+    AppPalette.pressedFlowers ||
+    AppPalette.moonlitLagoon => 'Robi Pack',
+    _ => 'WordBucket Original',
   };
 }
 
@@ -116,6 +218,28 @@ ThemeData _buildTheme(Brightness brightness, AppPalette palette) {
           ? const Color(0xFF333333)
           : const Color(0xFFE2E2E2),
       onSecondaryContainer: dark ? Colors.white : const Color(0xFF111111),
+    );
+  }
+  if (palette == AppPalette.cherryInk) {
+    scheme = scheme.copyWith(
+      primary: dark ? const Color(0xFFE68A9A) : const Color(0xFF8F2040),
+      onPrimary: dark ? const Color(0xFF351018) : Colors.white,
+      primaryContainer: dark
+          ? const Color(0xFF5A1D30)
+          : const Color(0xFFF4D6DB),
+      onPrimaryContainer: dark
+          ? const Color(0xFFFFD9DF)
+          : const Color(0xFF5C1028),
+      secondary: dark ? const Color(0xFFD3A4AB) : const Color(0xFF76565D),
+      onSecondary: dark ? const Color(0xFF2D151A) : Colors.white,
+      tertiary: dark ? const Color(0xFFD78391) : const Color(0xFFB6435F),
+      onTertiary: dark ? const Color(0xFF351018) : Colors.white,
+      tertiaryContainer: dark
+          ? const Color(0xFF4B2631)
+          : const Color(0xFFF0CDD2),
+      onTertiaryContainer: dark
+          ? const Color(0xFFFFD9DF)
+          : const Color(0xFF541125),
     );
   }
   final raisedSurface = Color.alphaBlend(
