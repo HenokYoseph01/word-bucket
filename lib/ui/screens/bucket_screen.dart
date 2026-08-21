@@ -121,6 +121,8 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     final meanings = ref.watch(savedMeaningsProvider).valueOrNull;
     final dueWordsAsync = ref.watch(dueWordsProvider);
     final statistics = ref.watch(reviewStatisticsProvider).valueOrNull;
+    final autocompleteOpen =
+        _suggestions.isNotEmpty && MediaQuery.viewInsetsOf(context).bottom > 0;
 
     return Scaffold(
       body: SafeArea(
@@ -135,12 +137,13 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
                 const SizedBox(height: 4),
                 _buildSuggestions(),
               ],
-              if (dueWordsAsync.valueOrNull case final dueWords?
-                  when dueWords.isNotEmpty) ...[
+              if (!autocompleteOpen &&
+                  dueWordsAsync.valueOrNull?.isNotEmpty == true) ...[
                 const SizedBox(height: 12),
-                _buildReviewBanner(dueWords),
+                _buildReviewBanner(dueWordsAsync.valueOrNull!),
               ],
-              if (statistics != null &&
+              if (!autocompleteOpen &&
+                  statistics != null &&
                   dueWordsAsync.valueOrNull?.isEmpty == true) ...[
                 const SizedBox(height: 12),
                 _buildProgressStrip(statistics),
@@ -335,11 +338,15 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
     return Card(
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final suggestion in _suggestions)
-            ListTile(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 168),
+        child: ListView.builder(
+          padding: EdgeInsets.zero,
+          shrinkWrap: true,
+          itemCount: _suggestions.length,
+          itemBuilder: (context, index) {
+            final suggestion = _suggestions[index];
+            return ListTile(
               dense: true,
               leading: const Icon(Icons.search, size: 20),
               title: Text(suggestion),
@@ -350,8 +357,9 @@ class _BucketScreenState extends ConsumerState<BucketScreen>
                 );
                 _lookUpWord();
               },
-            ),
-        ],
+            );
+          },
+        ),
       ),
     );
   }
