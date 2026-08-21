@@ -7,8 +7,11 @@ import '../core/constants.dart';
 import '../core/theme.dart';
 
 class ThemeModeNotifier extends StateNotifier<ThemeMode> {
-  ThemeModeNotifier() : super(ThemeMode.system) {
-    _load();
+  ThemeModeNotifier({
+    ThemeMode initialMode = ThemeMode.system,
+    bool load = true,
+  }) : super(initialMode) {
+    if (load) _load();
   }
 
   Future<void> _load() async {
@@ -34,8 +37,11 @@ final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>((
 });
 
 class ThemePaletteNotifier extends StateNotifier<AppPalette> {
-  ThemePaletteNotifier() : super(AppPalette.classicInk) {
-    _load();
+  ThemePaletteNotifier({
+    AppPalette initialPalette = AppPalette.classicInk,
+    bool load = true,
+  }) : super(initialPalette) {
+    if (load) _load();
   }
 
   Future<void> _load() async {
@@ -58,6 +64,38 @@ final themePaletteProvider =
     StateNotifierProvider<ThemePaletteNotifier, AppPalette>((ref) {
       return ThemePaletteNotifier();
     });
+
+class StartupTheme {
+  const StartupTheme({required this.mode, required this.palette});
+
+  final ThemeMode mode;
+  final AppPalette palette;
+}
+
+Future<StartupTheme> loadStartupTheme() async {
+  try {
+    final preferences = SharedPreferencesAsync();
+    final values = await Future.wait<String?>([
+      preferences.getString(themeModeKey),
+      preferences.getString(themePaletteKey),
+    ]);
+    return StartupTheme(
+      mode: ThemeMode.values.firstWhere(
+        (mode) => mode.name == values[0],
+        orElse: () => ThemeMode.system,
+      ),
+      palette: AppPalette.values.firstWhere(
+        (palette) => palette.name == values[1],
+        orElse: () => AppPalette.classicInk,
+      ),
+    );
+  } on Exception {
+    return const StartupTheme(
+      mode: ThemeMode.system,
+      palette: AppPalette.classicInk,
+    );
+  }
+}
 
 Future<void> _syncWidgetAppearance({
   String? themeMode,
