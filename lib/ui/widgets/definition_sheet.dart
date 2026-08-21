@@ -26,6 +26,33 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
       mediaQuery.viewInsets.bottom,
       mediaQuery.viewPadding.bottom,
     );
+    final sheetContent = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Center(
+          child: Container(
+            width: 42,
+            height: 5,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.outlineVariant,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 280),
+          child: lookup.isLoading
+              ? _buildLoading(context, lookup.isRetrying)
+              : lookup.error != null
+              ? _buildError(context, lookup.error!, lookup.canRetry)
+              : lookup.result != null
+              ? _buildDefinition(context)
+              : const SizedBox.shrink(),
+        ),
+      ],
+    );
 
     return Material(
       color: Theme.of(context).scaffoldBackgroundColor,
@@ -38,35 +65,23 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
           right: 20,
           bottom: safeBottom + 20,
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 42,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
+        child: lookup.result == null
+            ? SingleChildScrollView(child: sheetContent)
+            : SizedBox(
+                height: math.min(mediaQuery.size.height * 0.84, 720),
+                child: Column(
+                  children: [
+                    Expanded(child: SingleChildScrollView(child: sheetContent)),
+                    const SizedBox(height: 10),
+                    Divider(
+                      height: 1,
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildDefinitionActions(context, lookup),
+                  ],
                 ),
               ),
-              const SizedBox(height: 20),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 280),
-                child: lookup.isLoading
-                    ? _buildLoading(context, lookup.isRetrying)
-                    : lookup.error != null
-                    ? _buildError(context, lookup.error!, lookup.canRetry)
-                    : lookup.result != null
-                    ? _buildDefinition(context)
-                    : const SizedBox.shrink(),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -170,7 +185,6 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
     final lookup = ref.watch(wordNotifierProvider);
     final word = lookup.result!;
     final existingWord = lookup.existingWord;
-    final selectedSavedMeaning = lookup.selectedSavedMeaning;
     final colors = Theme.of(context).colorScheme;
 
     return Column(
@@ -350,53 +364,59 @@ class _DefinitionSheetState extends ConsumerState<DefinitionSheet> {
             ),
           ),
         ],
-        const SizedBox(height: 22),
-        if (selectedSavedMeaning != null)
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.check_rounded),
-              label: Text(
-                'Already saved · ${_formatSavedDate(selectedSavedMeaning.savedAt)}',
-              ),
-            ),
-          )
-        else
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _isSaving ? null : () => Navigator.pop(context),
-                  child: const Text('Not now'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: FilledButton.icon(
-                  onPressed: _isSaving ? null : _saveWord,
-                  icon: _isSaving
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.bookmark_add_rounded),
-                  label: Text(
-                    _isSaving
-                        ? 'Saving…'
-                        : existingWord != null
-                        ? 'Add this meaning'
-                        : 'Save to Bucket',
-                  ),
-                ),
-              ),
-            ],
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+
+  Widget _buildDefinitionActions(BuildContext context, LookupState lookup) {
+    final selectedSavedMeaning = lookup.selectedSavedMeaning;
+    if (selectedSavedMeaning != null) {
+      return SizedBox(
+        key: ValueKey('saved-${selectedSavedMeaning.id}'),
+        width: double.infinity,
+        child: FilledButton.icon(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.check_rounded),
+          label: Text(
+            'Already saved · ${_formatSavedDate(selectedSavedMeaning.savedAt)}',
           ),
+        ),
+      );
+    }
+    return Row(
+      key: ValueKey('save-${lookup.result?.definition}'),
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: _isSaving ? null : () => Navigator.pop(context),
+            child: const Text('Not now'),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 2,
+          child: FilledButton.icon(
+            onPressed: _isSaving ? null : _saveWord,
+            icon: _isSaving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.bookmark_add_rounded),
+            label: Text(
+              _isSaving
+                  ? 'Saving…'
+                  : lookup.existingWord != null
+                  ? 'Add this meaning'
+                  : 'Save to Bucket',
+            ),
+          ),
+        ),
       ],
     );
   }
