@@ -86,7 +86,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.rosePetal => const Color(0xFF21151B),
     AppPalette.matchaHoney => const Color(0xFF1B1D13),
     AppPalette.lilacEvening => const Color(0xFF222433),
-    AppPalette.cherryInk => const Color(0xFF211218),
+    AppPalette.cherryInk => const Color(0xFF180C11),
     AppPalette.pressedFlowers => const Color(0xFF2A171D),
     AppPalette.moonlitLagoon => const Color(0xFF071F28),
   };
@@ -144,7 +144,7 @@ extension AppPaletteDetails on AppPalette {
       Color(0xFFF0CDD2),
       Color(0xFFD78391),
       Color(0xFF8F2040),
-      Color(0xFF211218),
+      Color(0xFF180C11),
     ],
     AppPalette.pressedFlowers => const [
       Color(0xFFF2E7D2),

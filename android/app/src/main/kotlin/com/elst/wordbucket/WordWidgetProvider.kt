@@ -216,7 +216,7 @@ class WordWidgetProvider : AppWidgetProvider() {
                 WidgetAppearance("#FCFCE2", "#D9D9C5", "#4D3E6B", "#6D657A", "#918C98", "#81749C", "#E4E8D9", "#4D3E6B")
             }
             "cherryInk" -> if (dark) {
-                WidgetAppearance("#211218", "#552936", "#FFF0F2", "#D9BBC1", "#A58A90", "#E68A9A", "#5A1D30", "#FFD9DF")
+                WidgetAppearance("#180C11", "#47232D", "#FFF0F2", "#D9BBC1", "#A58A90", "#E68A9A", "#52182A", "#FFD9DF")
             } else {
                 WidgetAppearance("#FFF8F3", "#EAD6D5", "#8F2040", "#71575D", "#99868A", "#B6435F", "#F0CDD2", "#8F2040")
             }
