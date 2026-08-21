@@ -211,7 +211,7 @@ class WordWidgetProvider : AppWidgetProvider() {
                 WidgetAppearance("#FCFAEF", "#DED9BC", "#56602E", "#6E705B", "#969584", "#7E883E", "#F1E8C7", "#56602E")
             }
             "lilacEvening" -> if (dark) {
-                WidgetAppearance("#211A2B", "#4B405B", "#F4F3E6", "#CBC8D0", "#9691A0", "#8DAEC3", "#413554", "#F1F0E4")
+                WidgetAppearance("#222433", "#47485A", "#F3F0FF", "#C9C5D8", "#9592A3", "#B8A9D6", "#463B5E", "#E9DFFF")
             } else {
                 WidgetAppearance("#FCFCE2", "#D9D9C5", "#4D3E6B", "#6D657A", "#918C98", "#81749C", "#E4E8D9", "#4D3E6B")
             }
@@ -221,12 +221,12 @@ class WordWidgetProvider : AppWidgetProvider() {
                 WidgetAppearance("#FFF8F3", "#EAD6D5", "#8F2040", "#71575D", "#99868A", "#B6435F", "#F0CDD2", "#8F2040")
             }
             "pressedFlowers" -> if (dark) {
-                WidgetAppearance("#1E1725", "#51415B", "#F7EDDF", "#D2C2CB", "#9A8B95", "#F79EB1", "#49344F", "#F7E8ED")
+                WidgetAppearance("#2A171D", "#59333E", "#FFF0F3", "#D9BBC3", "#A58A92", "#EE9DB0", "#652B3C", "#FFD9E0")
             } else {
                 WidgetAppearance("#F2E7D2", "#D9C9BB", "#473469", "#6D6075", "#948994", "#9A617E", "#E9D7DA", "#473469")
             }
             "moonlitLagoon" -> if (dark) {
-                WidgetAppearance("#0D0F36", "#343A5F", "#F1F6CE", "#C3C9B5", "#8E9588", "#69D2CD", "#263962", "#E5F1D2")
+                WidgetAppearance("#071F28", "#294751", "#E5FFFA", "#B7D3CF", "#839D9B", "#69D2CD", "#155653", "#B9FFF9")
             } else {
                 WidgetAppearance("#F1F6CE", "#D2DAB8", "#294380", "#5A6875", "#87918A", "#287F83", "#D7E9D0", "#294380")
             }

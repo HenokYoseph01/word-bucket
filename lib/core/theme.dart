@@ -85,10 +85,10 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.monochromePaper => const Color(0xFF000000),
     AppPalette.rosePetal => const Color(0xFF21151B),
     AppPalette.matchaHoney => const Color(0xFF1B1D13),
-    AppPalette.lilacEvening => const Color(0xFF211A2B),
+    AppPalette.lilacEvening => const Color(0xFF222433),
     AppPalette.cherryInk => const Color(0xFF211218),
-    AppPalette.pressedFlowers => const Color(0xFF1E1725),
-    AppPalette.moonlitLagoon => const Color(0xFF0D0F36),
+    AppPalette.pressedFlowers => const Color(0xFF2A171D),
+    AppPalette.moonlitLagoon => const Color(0xFF071F28),
   };
 
   List<Color> get previewColors => switch (this) {
@@ -242,6 +242,48 @@ ThemeData _buildTheme(Brightness brightness, AppPalette palette) {
       onTertiaryContainer: dark
           ? const Color(0xFFFFD9DF)
           : const Color(0xFF541125),
+    );
+  }
+  if (dark && palette == AppPalette.lilacEvening) {
+    scheme = scheme.copyWith(
+      primary: const Color(0xFFB8A9D6),
+      onPrimary: const Color(0xFF282037),
+      primaryContainer: const Color(0xFF463B5E),
+      onPrimaryContainer: const Color(0xFFE9DFFF),
+      secondary: const Color(0xFFAEBACD),
+      onSecondary: const Color(0xFF202631),
+      tertiary: const Color(0xFF8DAEC3),
+      onTertiary: const Color(0xFF102731),
+      tertiaryContainer: const Color(0xFF304B5A),
+      onTertiaryContainer: const Color(0xFFD7F0FF),
+    );
+  }
+  if (dark && palette == AppPalette.pressedFlowers) {
+    scheme = scheme.copyWith(
+      primary: const Color(0xFFEE9DB0),
+      onPrimary: const Color(0xFF3A1420),
+      primaryContainer: const Color(0xFF652B3C),
+      onPrimaryContainer: const Color(0xFFFFD9E0),
+      secondary: const Color(0xFFD2B0B8),
+      onSecondary: const Color(0xFF321A21),
+      tertiary: const Color(0xFFAE8FBA),
+      onTertiary: const Color(0xFF2F2035),
+      tertiaryContainer: const Color(0xFF4C3853),
+      onTertiaryContainer: const Color(0xFFF4DBFC),
+    );
+  }
+  if (dark && palette == AppPalette.moonlitLagoon) {
+    scheme = scheme.copyWith(
+      primary: const Color(0xFF69D2CD),
+      onPrimary: const Color(0xFF003735),
+      primaryContainer: const Color(0xFF155653),
+      onPrimaryContainer: const Color(0xFFB9FFF9),
+      secondary: const Color(0xFF9DC9C1),
+      onSecondary: const Color(0xFF0A2D2C),
+      tertiary: const Color(0xFFB9F1D6),
+      onTertiary: const Color(0xFF12372B),
+      tertiaryContainer: const Color(0xFF315849),
+      onTertiaryContainer: const Color(0xFFD5FFE9),
     );
   }
   final raisedSurface = Color.alphaBlend(
