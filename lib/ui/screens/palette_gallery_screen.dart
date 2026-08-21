@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../providers/theme_provider.dart';
 
+enum _PaletteFilter { all, originals, robiPack }
+
 class PaletteGalleryScreen extends ConsumerStatefulWidget {
   const PaletteGalleryScreen({super.key});
 
@@ -15,9 +17,22 @@ class PaletteGalleryScreen extends ConsumerStatefulWidget {
 }
 
 class _PaletteGalleryScreenState extends ConsumerState<PaletteGalleryScreen> {
-  late final PageController _controller;
+  late PageController _controller;
   late AppPalette _preview;
+  _PaletteFilter _filter = _PaletteFilter.all;
   bool _confirming = false;
+
+  List<AppPalette> get _visiblePalettes => switch (_filter) {
+    _PaletteFilter.all => AppPalette.values,
+    _PaletteFilter.originals =>
+      AppPalette.values
+          .where((palette) => !palette.isRobiPack)
+          .toList(growable: false),
+    _PaletteFilter.robiPack =>
+      AppPalette.values
+          .where((palette) => palette.isRobiPack)
+          .toList(growable: false),
+  };
 
   @override
   void initState() {
@@ -33,6 +48,34 @@ class _PaletteGalleryScreenState extends ConsumerState<PaletteGalleryScreen> {
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void _setFilter(_PaletteFilter filter) {
+    if (_filter == filter || _confirming) return;
+    final palettes = switch (filter) {
+      _PaletteFilter.all => AppPalette.values,
+      _PaletteFilter.originals =>
+        AppPalette.values
+            .where((palette) => !palette.isRobiPack)
+            .toList(growable: false),
+      _PaletteFilter.robiPack =>
+        AppPalette.values
+            .where((palette) => palette.isRobiPack)
+            .toList(growable: false),
+    };
+    final nextPreview = palettes.contains(_preview) ? _preview : palettes.first;
+    final oldController = _controller;
+    setState(() {
+      _filter = filter;
+      _preview = nextPreview;
+      _controller = PageController(
+        initialPage: palettes.indexOf(nextPreview),
+        viewportFraction: 0.86,
+      );
+    });
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => oldController.dispose(),
+    );
   }
 
   Future<void> _select() async {
@@ -54,6 +97,7 @@ class _PaletteGalleryScreenState extends ConsumerState<PaletteGalleryScreen> {
     final selected = ref.watch(themePaletteProvider);
     final colors = Theme.of(context).colorScheme;
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final visiblePalettes = _visiblePalettes;
 
     return PopScope(
       canPop: !_confirming,
@@ -67,7 +111,7 @@ class _PaletteGalleryScreenState extends ConsumerState<PaletteGalleryScreen> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 4, 24, 18),
+                padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
                 child: Text(
                   'Swipe through reading atmospheres. Nothing changes until you choose one.',
                   textAlign: TextAlign.center,
@@ -77,17 +121,44 @@ class _PaletteGalleryScreenState extends ConsumerState<PaletteGalleryScreen> {
                   ),
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<_PaletteFilter>(
+                    showSelectedIcon: false,
+                    segments: const [
+                      ButtonSegment(
+                        value: _PaletteFilter.all,
+                        label: Text('All'),
+                      ),
+                      ButtonSegment(
+                        value: _PaletteFilter.originals,
+                        label: Text('Originals'),
+                      ),
+                      ButtonSegment(
+                        value: _PaletteFilter.robiPack,
+                        label: Text('Robi Pack'),
+                      ),
+                    ],
+                    selected: {_filter},
+                    onSelectionChanged: (selection) =>
+                        _setFilter(selection.first),
+                  ),
+                ),
+              ),
               Expanded(
                 child: PageView.builder(
+                  key: ValueKey(_filter),
                   controller: _controller,
                   physics: _confirming
                       ? const NeverScrollableScrollPhysics()
                       : const BouncingScrollPhysics(),
-                  itemCount: AppPalette.values.length,
+                  itemCount: visiblePalettes.length,
                   onPageChanged: (index) =>
-                      setState(() => _preview = AppPalette.values[index]),
+                      setState(() => _preview = visiblePalettes[index]),
                   itemBuilder: (context, index) {
-                    final palette = AppPalette.values[index];
+                    final palette = visiblePalettes[index];
                     return AnimatedBuilder(
                       animation: _controller,
                       builder: (context, child) {
@@ -120,7 +191,7 @@ class _PaletteGalleryScreenState extends ConsumerState<PaletteGalleryScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              _PageDots(current: _preview),
+              _PageDots(current: _preview, palettes: visiblePalettes),
               Padding(
                 padding: EdgeInsets.fromLTRB(24, 18, 24, 18 + bottomPadding),
                 child: SizedBox(
@@ -370,20 +441,21 @@ class _PalettePreviewCard extends StatelessWidget {
 }
 
 class _PageDots extends StatelessWidget {
-  const _PageDots({required this.current});
+  const _PageDots({required this.current, required this.palettes});
 
   final AppPalette current;
+  final List<AppPalette> palettes;
 
   @override
   Widget build(BuildContext context) {
-    final activeIndex = AppPalette.values.indexOf(current);
+    final activeIndex = palettes.indexOf(current);
     final colors = Theme.of(context).colorScheme;
     return Semantics(
-      label: 'Palette ${activeIndex + 1} of ${AppPalette.values.length}',
+      label: 'Palette ${activeIndex + 1} of ${palettes.length}',
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          for (var index = 0; index < AppPalette.values.length; index++)
+          for (var index = 0; index < palettes.length; index++)
             AnimatedContainer(
               duration: const Duration(milliseconds: 240),
               width: activeIndex == index ? 18 : 6,

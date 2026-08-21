@@ -9,8 +9,8 @@ enum AppPalette {
   monochromePaper,
   rosePetal,
   matchaHoney,
-  lilacEvening,
   cherryInk,
+  lilacEvening,
   pressedFlowers,
   moonlitLagoon,
 }
@@ -168,6 +168,8 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.moonlitLagoon => 'Robi Pack',
     _ => 'WordBucket Original',
   };
+
+  bool get isRobiPack => collectionLabel == 'Robi Pack';
 }
 
 ThemeData buildWordBucketTheme({AppPalette palette = AppPalette.classicInk}) {
