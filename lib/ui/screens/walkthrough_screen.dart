@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
 class WalkthroughScreen extends StatefulWidget {
-  const WalkthroughScreen({super.key});
+  const WalkthroughScreen({this.initialPage = 0, super.key});
+
+  final int initialPage;
 
   @override
   State<WalkthroughScreen> createState() => _WalkthroughScreenState();
 }
 
 class _WalkthroughScreenState extends State<WalkthroughScreen> {
-  final _controller = PageController();
-  int _page = 0;
+  late final PageController _controller;
+  late int _page;
 
   static const _pages = [
     _WalkthroughPage(
@@ -73,6 +75,13 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
       note: 'You can change reminders, themes, and palettes in Settings.',
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _page = widget.initialPage.clamp(0, _pages.length - 1);
+    _controller = PageController(initialPage: _page);
+  }
 
   @override
   void dispose() {

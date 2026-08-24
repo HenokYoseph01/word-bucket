@@ -3,8 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_shell_screen.dart';
 import 'walkthrough_screen.dart';
+import 'whats_new_screen.dart';
 
 const walkthroughSeenKey = 'walkthrough_seen';
+const whatsNewSeenKey = 'whats_new_seen_release';
 
 class AppLaunchScreen extends StatefulWidget {
   const AppLaunchScreen({super.key});
@@ -54,12 +56,23 @@ class _AppLaunchScreenState extends State<AppLaunchScreen>
     await _controller.forward();
     final preferences = SharedPreferencesAsync();
     final seen = await preferences.getBool(walkthroughSeenKey) ?? false;
-    if (!mounted || seen) return;
+    if (!mounted) return;
+
+    if (seen) {
+      final whatsNewSeen = await preferences.getString(whatsNewSeenKey);
+      if (!mounted || whatsNewSeen == WhatsNewScreen.releaseId) return;
+      await Navigator.of(
+        context,
+      ).push<void>(MaterialPageRoute(builder: (_) => const WhatsNewScreen()));
+      await preferences.setString(whatsNewSeenKey, WhatsNewScreen.releaseId);
+      return;
+    }
 
     await Navigator.of(
       context,
     ).push<void>(MaterialPageRoute(builder: (_) => const WalkthroughScreen()));
     await preferences.setBool(walkthroughSeenKey, true);
+    await preferences.setString(whatsNewSeenKey, WhatsNewScreen.releaseId);
   }
 
   @override

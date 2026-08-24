@@ -11,6 +11,7 @@ import '../../providers/theme_provider.dart';
 import '../../providers/word_provider.dart';
 import 'palette_gallery_screen.dart';
 import 'walkthrough_screen.dart';
+import 'whats_new_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -438,6 +439,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               child: Column(
                 children: [
                   ListTile(
+                    leading: const Icon(Icons.auto_awesome_rounded),
+                    title: const Text('What’s new in 1.1'),
+                    subtitle: const Text(
+                      'Replay the latest feature introduction.',
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_rounded),
+                    onTap: () => Navigator.of(context).push<void>(
+                      MaterialPageRoute(builder: (_) => const WhatsNewScreen()),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  ListTile(
                     leading: const Icon(Icons.auto_stories_rounded),
                     title: const Text('How to use WordBucket'),
                     subtitle: const Text('Replay the seven-step introduction.'),
@@ -445,6 +458,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     onTap: () => Navigator.of(context).push<void>(
                       MaterialPageRoute(
                         builder: (_) => const WalkthroughScreen(),
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, indent: 56),
+                  ListTile(
+                    leading: const Icon(Icons.bubble_chart_rounded),
+                    title: const Text('Using Reading Companion'),
+                    subtitle: const Text(
+                      'Learn how to start, use, move, and close the reading bubble.',
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_rounded),
+                    onTap: () => Navigator.of(context).push<void>(
+                      MaterialPageRoute(
+                        builder: (_) => const WalkthroughScreen(initialPage: 1),
                       ),
                     ),
                   ),
