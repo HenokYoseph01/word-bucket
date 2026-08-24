@@ -10,6 +10,7 @@ enum AppPalette {
   rosePetal,
   matchaHoney,
   cherryInk,
+  hotPink,
   lilacEvening,
   pressedFlowers,
   moonlitLagoon,
@@ -27,6 +28,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.matchaHoney => 'Matcha & Honey',
     AppPalette.lilacEvening => 'Lilac Evening',
     AppPalette.cherryInk => 'Cherry Ink',
+    AppPalette.hotPink => 'Hot Pink',
     AppPalette.pressedFlowers => 'Pressed Flowers',
     AppPalette.moonlitLagoon => 'Moonlit Lagoon',
   };
@@ -41,7 +43,8 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.rosePetal => const Color(0xFFA75A7A),
     AppPalette.matchaHoney => const Color(0xFF9CA764),
     AppPalette.lilacEvening => const Color(0xFF4D3E6B),
-    AppPalette.cherryInk => const Color(0xFF8F2040),
+    AppPalette.cherryInk => const Color(0xFF68152C),
+    AppPalette.hotPink => const Color(0xFFD81B60),
     AppPalette.pressedFlowers => const Color(0xFF473469),
     AppPalette.moonlitLagoon => const Color(0xFF294380),
   };
@@ -56,7 +59,8 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.rosePetal => const Color(0xFFE7A5B8),
     AppPalette.matchaHoney => const Color(0xFFF1E8C7),
     AppPalette.lilacEvening => const Color(0xFF8DAEC3),
-    AppPalette.cherryInk => const Color(0xFFD78391),
+    AppPalette.cherryInk => const Color(0xFFB65D70),
+    AppPalette.hotPink => const Color(0xFFFF79B0),
     AppPalette.pressedFlowers => const Color(0xFFF79EB1),
     AppPalette.moonlitLagoon => const Color(0xFF69D2CD),
   };
@@ -72,6 +76,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.matchaHoney => const Color(0xFFFCFAEF),
     AppPalette.lilacEvening => const Color(0xFFFCFCE2),
     AppPalette.cherryInk => const Color(0xFFFFF8F3),
+    AppPalette.hotPink => const Color(0xFFFFF7FB),
     AppPalette.pressedFlowers => const Color(0xFFF2E7D2),
     AppPalette.moonlitLagoon => const Color(0xFFF1F6CE),
   };
@@ -87,6 +92,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.matchaHoney => const Color(0xFF1B1D13),
     AppPalette.lilacEvening => const Color(0xFF222433),
     AppPalette.cherryInk => const Color(0xFF180C11),
+    AppPalette.hotPink => const Color(0xFF190A12),
     AppPalette.pressedFlowers => const Color(0xFF2A171D),
     AppPalette.moonlitLagoon => const Color(0xFF071F28),
   };
@@ -141,10 +147,17 @@ extension AppPaletteDetails on AppPalette {
     ],
     AppPalette.cherryInk => const [
       Color(0xFFFFF8F3),
-      Color(0xFFF0CDD2),
-      Color(0xFFD78391),
-      Color(0xFF8F2040),
+      Color(0xFFE8C2C9),
+      Color(0xFFB65D70),
+      Color(0xFF68152C),
       Color(0xFF180C11),
+    ],
+    AppPalette.hotPink => const [
+      Color(0xFFFFF7FB),
+      Color(0xFFFFD3E4),
+      Color(0xFFFF79B0),
+      Color(0xFFD81B60),
+      Color(0xFF4A102A),
     ],
     AppPalette.pressedFlowers => const [
       Color(0xFFF2E7D2),
@@ -224,24 +237,46 @@ ThemeData _buildTheme(Brightness brightness, AppPalette palette) {
   }
   if (palette == AppPalette.cherryInk) {
     scheme = scheme.copyWith(
-      primary: dark ? const Color(0xFFE68A9A) : const Color(0xFF8F2040),
+      primary: dark ? const Color(0xFFC94F69) : const Color(0xFF68152C),
       onPrimary: dark ? const Color(0xFF351018) : Colors.white,
       primaryContainer: dark
-          ? const Color(0xFF5A1D30)
-          : const Color(0xFFF4D6DB),
+          ? const Color(0xFF471323)
+          : const Color(0xFFECCDD2),
       onPrimaryContainer: dark
-          ? const Color(0xFFFFD9DF)
-          : const Color(0xFF5C1028),
-      secondary: dark ? const Color(0xFFD3A4AB) : const Color(0xFF76565D),
+          ? const Color(0xFFFFD8DE)
+          : const Color(0xFF4B0C1D),
+      secondary: dark ? const Color(0xFFC99AA3) : const Color(0xFF6F5157),
       onSecondary: dark ? const Color(0xFF2D151A) : Colors.white,
-      tertiary: dark ? const Color(0xFFD78391) : const Color(0xFFB6435F),
+      tertiary: dark ? const Color(0xFFB65D70) : const Color(0xFF8F2038),
       onTertiary: dark ? const Color(0xFF351018) : Colors.white,
       tertiaryContainer: dark
-          ? const Color(0xFF4B2631)
-          : const Color(0xFFF0CDD2),
+          ? const Color(0xFF3D2028)
+          : const Color(0xFFE8C2C9),
       onTertiaryContainer: dark
           ? const Color(0xFFFFD9DF)
-          : const Color(0xFF541125),
+          : const Color(0xFF450B1A),
+    );
+  }
+  if (palette == AppPalette.hotPink) {
+    scheme = scheme.copyWith(
+      primary: dark ? const Color(0xFFFF73AA) : const Color(0xFFC2185B),
+      onPrimary: dark ? const Color(0xFF4A0824) : Colors.white,
+      primaryContainer: dark
+          ? const Color(0xFF5F1737)
+          : const Color(0xFFFFD7E6),
+      onPrimaryContainer: dark
+          ? const Color(0xFFFFD9E7)
+          : const Color(0xFF65002A),
+      secondary: dark ? const Color(0xFFE2A9BC) : const Color(0xFF805461),
+      onSecondary: dark ? const Color(0xFF3A1B25) : Colors.white,
+      tertiary: dark ? const Color(0xFFFF9CC3) : const Color(0xFFE83E7F),
+      onTertiary: dark ? const Color(0xFF4D1028) : Colors.white,
+      tertiaryContainer: dark
+          ? const Color(0xFF51283A)
+          : const Color(0xFFFFD3E4),
+      onTertiaryContainer: dark
+          ? const Color(0xFFFFD9E7)
+          : const Color(0xFF65002A),
     );
   }
   if (dark && palette == AppPalette.lilacEvening) {

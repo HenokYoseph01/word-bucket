@@ -216,9 +216,14 @@ class WordWidgetProvider : AppWidgetProvider() {
                 WidgetAppearance("#FCFCE2", "#D9D9C5", "#4D3E6B", "#6D657A", "#918C98", "#81749C", "#E4E8D9", "#4D3E6B")
             }
             "cherryInk" -> if (dark) {
-                WidgetAppearance("#180C11", "#47232D", "#FFF0F2", "#D9BBC1", "#A58A90", "#E68A9A", "#52182A", "#FFD9DF")
+                WidgetAppearance("#180C11", "#3D1D25", "#FFF0F2", "#D9BBC1", "#A58A90", "#C94F69", "#471323", "#FFD8DE")
             } else {
-                WidgetAppearance("#FFF8F3", "#EAD6D5", "#8F2040", "#71575D", "#99868A", "#B6435F", "#F0CDD2", "#8F2040")
+                WidgetAppearance("#FFF8F3", "#E4D1D1", "#68152C", "#685257", "#928184", "#8F2038", "#E8C2C9", "#68152C")
+            }
+            "hotPink" -> if (dark) {
+                WidgetAppearance("#190A12", "#4A2434", "#FFF0F6", "#DDBBC8", "#AA8996", "#FF73AA", "#5F1737", "#FFD9E7")
+            } else {
+                WidgetAppearance("#FFF7FB", "#EBD6DE", "#C2185B", "#765963", "#9C8790", "#D81B60", "#FFD7E6", "#C2185B")
             }
             "pressedFlowers" -> if (dark) {
                 WidgetAppearance("#2A171D", "#59333E", "#FFF0F3", "#D9BBC3", "#A58A92", "#EE9DB0", "#652B3C", "#FFD9E0")
