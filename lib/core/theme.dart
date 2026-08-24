@@ -6,6 +6,7 @@ enum AppPalette {
   sepiaLibrary,
   plumNotebook,
   midnightBlue,
+  cobaltGlow,
   monochromePaper,
   rosePetal,
   matchaHoney,
@@ -23,6 +24,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.sepiaLibrary => 'Sepia Library',
     AppPalette.plumNotebook => 'Plum Notebook',
     AppPalette.midnightBlue => 'Midnight Blue',
+    AppPalette.cobaltGlow => 'Cobalt Glow',
     AppPalette.monochromePaper => 'Monochrome Paper',
     AppPalette.rosePetal => 'Rose Petal',
     AppPalette.matchaHoney => 'Matcha & Honey',
@@ -38,7 +40,8 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.forestJournal => const Color(0xFF315B45),
     AppPalette.sepiaLibrary => const Color(0xFF6B4932),
     AppPalette.plumNotebook => const Color(0xFF65445F),
-    AppPalette.midnightBlue => const Color(0xFF2457D6),
+    AppPalette.midnightBlue => const Color(0xFF354B6B),
+    AppPalette.cobaltGlow => const Color(0xFF2457D6),
     AppPalette.monochromePaper => const Color(0xFF111111),
     AppPalette.rosePetal => const Color(0xFFA75A7A),
     AppPalette.matchaHoney => const Color(0xFF9CA764),
@@ -54,7 +57,8 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.forestJournal => const Color(0xFFC79A45),
     AppPalette.sepiaLibrary => const Color(0xFFB7793F),
     AppPalette.plumNotebook => const Color(0xFFD09A5B),
-    AppPalette.midnightBlue => const Color(0xFF67A7FF),
+    AppPalette.midnightBlue => const Color(0xFF8FAED1),
+    AppPalette.cobaltGlow => const Color(0xFF67A7FF),
     AppPalette.monochromePaper => const Color(0xFF777777),
     AppPalette.rosePetal => const Color(0xFFE7A5B8),
     AppPalette.matchaHoney => const Color(0xFFF1E8C7),
@@ -71,6 +75,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.sepiaLibrary => const Color(0xFFFFF5DF),
     AppPalette.plumNotebook => const Color(0xFFFFF7FA),
     AppPalette.midnightBlue => const Color(0xFFF6F8FC),
+    AppPalette.cobaltGlow => const Color(0xFFF6F8FC),
     AppPalette.monochromePaper => const Color(0xFFFFFFFF),
     AppPalette.rosePetal => const Color(0xFFFFF5F8),
     AppPalette.matchaHoney => const Color(0xFFFCFAEF),
@@ -87,6 +92,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.sepiaLibrary => const Color(0xFF211813),
     AppPalette.plumNotebook => const Color(0xFF20171F),
     AppPalette.midnightBlue => const Color(0xFF111821),
+    AppPalette.cobaltGlow => const Color(0xFF111821),
     AppPalette.monochromePaper => const Color(0xFF000000),
     AppPalette.rosePetal => const Color(0xFF21151B),
     AppPalette.matchaHoney => const Color(0xFF1B1D13),
@@ -119,6 +125,11 @@ extension AppPaletteDetails on AppPalette {
       Color(0xFFD09A5B),
     ],
     AppPalette.midnightBlue => const [
+      Color(0xFFF6F8FC),
+      Color(0xFF354B6B),
+      Color(0xFF8FAED1),
+    ],
+    AppPalette.cobaltGlow => const [
       Color(0xFFF6F8FC),
       Color(0xFF2457D6),
       Color(0xFF67A7FF),
@@ -279,7 +290,7 @@ ThemeData _buildTheme(Brightness brightness, AppPalette palette) {
           : const Color(0xFF65002A),
     );
   }
-  if (palette == AppPalette.midnightBlue) {
+  if (palette == AppPalette.cobaltGlow) {
     scheme = scheme.copyWith(
       primary: dark ? const Color(0xFF72A9FF) : const Color(0xFF2457D6),
       onPrimary: dark ? const Color(0xFF001B45) : Colors.white,
