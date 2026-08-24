@@ -43,7 +43,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.rosePetal => const Color(0xFFA75A7A),
     AppPalette.matchaHoney => const Color(0xFF9CA764),
     AppPalette.lilacEvening => const Color(0xFF4D3E6B),
-    AppPalette.cherryInk => const Color(0xFF68152C),
+    AppPalette.cherryInk => const Color(0xFFD9143F),
     AppPalette.hotPink => const Color(0xFFE60073),
     AppPalette.pressedFlowers => const Color(0xFF473469),
     AppPalette.moonlitLagoon => const Color(0xFF294380),
@@ -59,7 +59,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.rosePetal => const Color(0xFFE7A5B8),
     AppPalette.matchaHoney => const Color(0xFFF1E8C7),
     AppPalette.lilacEvening => const Color(0xFF8DAEC3),
-    AppPalette.cherryInk => const Color(0xFFB65D70),
+    AppPalette.cherryInk => const Color(0xFFFF526F),
     AppPalette.hotPink => const Color(0xFFFF4FA3),
     AppPalette.pressedFlowers => const Color(0xFFF79EB1),
     AppPalette.moonlitLagoon => const Color(0xFF69D2CD),
@@ -147,9 +147,9 @@ extension AppPaletteDetails on AppPalette {
     ],
     AppPalette.cherryInk => const [
       Color(0xFFFFF8F3),
-      Color(0xFFE8C2C9),
-      Color(0xFFB65D70),
-      Color(0xFF68152C),
+      Color(0xFFFFD0D6),
+      Color(0xFFFF526F),
+      Color(0xFFD9143F),
       Color(0xFF180C11),
     ],
     AppPalette.hotPink => const [
@@ -237,24 +237,24 @@ ThemeData _buildTheme(Brightness brightness, AppPalette palette) {
   }
   if (palette == AppPalette.cherryInk) {
     scheme = scheme.copyWith(
-      primary: dark ? const Color(0xFFC94F69) : const Color(0xFF68152C),
-      onPrimary: dark ? const Color(0xFF351018) : Colors.white,
+      primary: dark ? const Color(0xFFFF5874) : const Color(0xFFC90E36),
+      onPrimary: dark ? const Color(0xFF45000F) : Colors.white,
       primaryContainer: dark
-          ? const Color(0xFF471323)
-          : const Color(0xFFECCDD2),
+          ? const Color(0xFF650F28)
+          : const Color(0xFFFFD5DB),
       onPrimaryContainer: dark
-          ? const Color(0xFFFFD8DE)
-          : const Color(0xFF4B0C1D),
-      secondary: dark ? const Color(0xFFC99AA3) : const Color(0xFF6F5157),
+          ? const Color(0xFFFFD9DE)
+          : const Color(0xFF680017),
+      secondary: dark ? const Color(0xFFE2A4AD) : const Color(0xFF7A5057),
       onSecondary: dark ? const Color(0xFF2D151A) : Colors.white,
-      tertiary: dark ? const Color(0xFFB65D70) : const Color(0xFF8F2038),
-      onTertiary: dark ? const Color(0xFF351018) : Colors.white,
+      tertiary: dark ? const Color(0xFFFF8294) : const Color(0xFFE3264F),
+      onTertiary: dark ? const Color(0xFF4A0715) : Colors.white,
       tertiaryContainer: dark
-          ? const Color(0xFF3D2028)
-          : const Color(0xFFE8C2C9),
+          ? const Color(0xFF511D29)
+          : const Color(0xFFFFD0D6),
       onTertiaryContainer: dark
           ? const Color(0xFFFFD9DF)
-          : const Color(0xFF450B1A),
+          : const Color(0xFF680017),
     );
   }
   if (palette == AppPalette.hotPink) {

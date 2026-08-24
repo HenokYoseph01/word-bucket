@@ -216,9 +216,9 @@ class WordWidgetProvider : AppWidgetProvider() {
                 WidgetAppearance("#FCFCE2", "#D9D9C5", "#4D3E6B", "#6D657A", "#918C98", "#81749C", "#E4E8D9", "#4D3E6B")
             }
             "cherryInk" -> if (dark) {
-                WidgetAppearance("#180C11", "#3D1D25", "#FFF0F2", "#D9BBC1", "#A58A90", "#C94F69", "#471323", "#FFD8DE")
+                WidgetAppearance("#180C11", "#471D27", "#FFF0F2", "#D9BBC1", "#A58A90", "#FF5874", "#650F28", "#FFD9DE")
             } else {
-                WidgetAppearance("#FFF8F3", "#E4D1D1", "#68152C", "#685257", "#928184", "#8F2038", "#E8C2C9", "#68152C")
+                WidgetAppearance("#FFF8F3", "#E8D2D2", "#C90E36", "#73565A", "#998589", "#D9143F", "#FFD0D6", "#C90E36")
             }
             "hotPink" -> if (dark) {
                 WidgetAppearance("#080308", "#341522", "#FFF0F7", "#DDBBC9", "#AA8997", "#FF4FA3", "#58002D", "#FFD9E7")
