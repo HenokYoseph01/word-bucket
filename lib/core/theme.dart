@@ -38,7 +38,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.forestJournal => const Color(0xFF315B45),
     AppPalette.sepiaLibrary => const Color(0xFF6B4932),
     AppPalette.plumNotebook => const Color(0xFF65445F),
-    AppPalette.midnightBlue => const Color(0xFF354B6B),
+    AppPalette.midnightBlue => const Color(0xFF2457D6),
     AppPalette.monochromePaper => const Color(0xFF111111),
     AppPalette.rosePetal => const Color(0xFFA75A7A),
     AppPalette.matchaHoney => const Color(0xFF9CA764),
@@ -54,7 +54,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.forestJournal => const Color(0xFFC79A45),
     AppPalette.sepiaLibrary => const Color(0xFFB7793F),
     AppPalette.plumNotebook => const Color(0xFFD09A5B),
-    AppPalette.midnightBlue => const Color(0xFF8FAED1),
+    AppPalette.midnightBlue => const Color(0xFF67A7FF),
     AppPalette.monochromePaper => const Color(0xFF777777),
     AppPalette.rosePetal => const Color(0xFFE7A5B8),
     AppPalette.matchaHoney => const Color(0xFFF1E8C7),
@@ -120,8 +120,8 @@ extension AppPaletteDetails on AppPalette {
     ],
     AppPalette.midnightBlue => const [
       Color(0xFFF6F8FC),
-      Color(0xFF354B6B),
-      Color(0xFF8FAED1),
+      Color(0xFF2457D6),
+      Color(0xFF67A7FF),
     ],
     AppPalette.monochromePaper => const [
       Color(0xFFFFFFFF),
@@ -277,6 +277,28 @@ ThemeData _buildTheme(Brightness brightness, AppPalette palette) {
       onTertiaryContainer: dark
           ? const Color(0xFFFFD9E7)
           : const Color(0xFF65002A),
+    );
+  }
+  if (palette == AppPalette.midnightBlue) {
+    scheme = scheme.copyWith(
+      primary: dark ? const Color(0xFF72A9FF) : const Color(0xFF2457D6),
+      onPrimary: dark ? const Color(0xFF001B45) : Colors.white,
+      primaryContainer: dark
+          ? const Color(0xFF173B78)
+          : const Color(0xFFDCE6FF),
+      onPrimaryContainer: dark
+          ? const Color(0xFFD9E6FF)
+          : const Color(0xFF082B72),
+      secondary: dark ? const Color(0xFFADC6EB) : const Color(0xFF526681),
+      onSecondary: dark ? const Color(0xFF172B46) : Colors.white,
+      tertiary: dark ? const Color(0xFF67A7FF) : const Color(0xFF3478EE),
+      onTertiary: dark ? const Color(0xFF002552) : Colors.white,
+      tertiaryContainer: dark
+          ? const Color(0xFF18395F)
+          : const Color(0xFFD6E6FF),
+      onTertiaryContainer: dark
+          ? const Color(0xFFD7E8FF)
+          : const Color(0xFF052A61),
     );
   }
   if (dark && palette == AppPalette.lilacEvening) {

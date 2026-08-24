@@ -98,6 +98,11 @@ class _PaletteGalleryScreenState extends ConsumerState<PaletteGalleryScreen> {
     final colors = Theme.of(context).colorScheme;
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
     final visiblePalettes = _visiblePalettes;
+    final buttonColor = _preview.seed;
+    final buttonForeground =
+        ThemeData.estimateBrightnessForColor(buttonColor) == Brightness.dark
+        ? Colors.white
+        : const Color(0xFF171717);
 
     return PopScope(
       canPop: !_confirming,
@@ -198,6 +203,10 @@ class _PaletteGalleryScreenState extends ConsumerState<PaletteGalleryScreen> {
                   width: double.infinity,
                   child: FilledButton.icon(
                     onPressed: _confirming ? null : _select,
+                    style: ButtonStyle(
+                      backgroundColor: WidgetStatePropertyAll(buttonColor),
+                      foregroundColor: WidgetStatePropertyAll(buttonForeground),
+                    ),
                     icon: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 260),
                       transitionBuilder: (child, animation) =>
@@ -243,6 +252,7 @@ class _PalettePreviewCard extends StatelessWidget {
     final paper = palette.lightPaper;
     final ink = palette.seed;
     final accent = palette.accent;
+    final titleInk = _brightenedInk(ink, palette);
     final inkOnAccent =
         ThemeData.estimateBrightnessForColor(accent) == Brightness.dark
         ? Colors.white
@@ -328,7 +338,7 @@ class _PalettePreviewCard extends StatelessWidget {
                   Text(
                     palette.label,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: ink,
+                      color: titleInk,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -438,6 +448,15 @@ class _PalettePreviewCard extends StatelessWidget {
       ),
     );
   }
+}
+
+Color _brightenedInk(Color color, AppPalette palette) {
+  if (palette == AppPalette.monochromePaper) return color;
+  final hsl = HSLColor.fromColor(color);
+  return hsl
+      .withSaturation(hsl.saturation.clamp(0.58, 0.88))
+      .withLightness(hsl.lightness.clamp(0.30, 0.46))
+      .toColor();
 }
 
 class _PageDots extends StatelessWidget {
