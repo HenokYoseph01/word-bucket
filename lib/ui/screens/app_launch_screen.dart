@@ -20,6 +20,9 @@ class _AppLaunchScreenState extends State<AppLaunchScreen>
   late final AnimationController _controller;
   late final Animation<double> _brandOpacity;
   late final Animation<double> _brandScale;
+  late final Animation<double> _bookTurn;
+  late final Animation<double> _bookRock;
+  late final Animation<double> _bookLift;
   late final Animation<double> _pageOpacity;
   late final Animation<Offset> _pageSlide;
 
@@ -28,32 +31,53 @@ class _AppLaunchScreenState extends State<AppLaunchScreen>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1450),
+      duration: const Duration(milliseconds: 1800),
     );
     _brandOpacity = TweenSequence<double>([
-      TweenSequenceItem(tween: ConstantTween(1), weight: 58),
-      TweenSequenceItem(tween: Tween(begin: 1, end: 0), weight: 42),
+      TweenSequenceItem(tween: ConstantTween(1), weight: 66),
+      TweenSequenceItem(tween: Tween(begin: 1, end: 0), weight: 34),
     ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
     _brandScale = Tween<double>(
       begin: 0.86,
       end: 1.06,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+    final bookMotion = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0, 0.64, curve: Curves.easeInOutCubic),
+    );
+    _bookTurn = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: -0.34, end: 0.15), weight: 42),
+      TweenSequenceItem(tween: Tween(begin: 0.15, end: -0.055), weight: 30),
+      TweenSequenceItem(tween: Tween(begin: -0.055, end: 0), weight: 28),
+    ]).animate(bookMotion);
+    _bookRock = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: -0.075, end: 0.045), weight: 48),
+      TweenSequenceItem(tween: Tween(begin: 0.045, end: 0), weight: 52),
+    ]).animate(bookMotion);
+    _bookLift = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 4, end: -9), weight: 48),
+      TweenSequenceItem(tween: Tween(begin: -9, end: 0), weight: 52),
+    ]).animate(bookMotion);
     _pageOpacity = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.56, 1, curve: Curves.easeOut),
+      curve: const Interval(0.64, 1, curve: Curves.easeOut),
     );
     _pageSlide = Tween<Offset>(begin: const Offset(0, 0.055), end: Offset.zero)
         .animate(
           CurvedAnimation(
             parent: _controller,
-            curve: const Interval(0.56, 1, curve: Curves.easeOutCubic),
+            curve: const Interval(0.64, 1, curve: Curves.easeOutCubic),
           ),
         );
     WidgetsBinding.instance.addPostFrameCallback((_) => _start());
   }
 
   Future<void> _start() async {
-    await _controller.forward();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.value = 1;
+    } else {
+      await _controller.forward();
+    }
     final preferences = SharedPreferencesAsync();
     final seen = await preferences.getBool(walkthroughSeenKey) ?? false;
     if (!mounted) return;
@@ -105,17 +129,38 @@ class _AppLaunchScreenState extends State<AppLaunchScreen>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        width: 82,
-                        height: 82,
-                        decoration: BoxDecoration(
-                          color: colors.primary,
-                          borderRadius: BorderRadius.circular(28),
+                      AnimatedBuilder(
+                        animation: _controller,
+                        builder: (context, child) => Transform.translate(
+                          offset: Offset(0, _bookLift.value),
+                          child: Transform(
+                            alignment: Alignment.center,
+                            transform: Matrix4.identity()
+                              ..setEntry(3, 2, 0.0018)
+                              ..rotateY(_bookTurn.value)
+                              ..rotateZ(_bookRock.value),
+                            child: child,
+                          ),
                         ),
-                        child: Icon(
-                          Icons.auto_stories_rounded,
-                          size: 42,
-                          color: colors.onPrimary,
+                        child: Container(
+                          width: 82,
+                          height: 82,
+                          decoration: BoxDecoration(
+                            color: colors.primary,
+                            borderRadius: BorderRadius.circular(28),
+                            boxShadow: [
+                              BoxShadow(
+                                color: colors.primary.withValues(alpha: 0.2),
+                                blurRadius: 20,
+                                offset: const Offset(0, 9),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.auto_stories_rounded,
+                            size: 42,
+                            color: colors.onPrimary,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 18),
