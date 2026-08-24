@@ -1,3 +1,5 @@
+import 'package:device_preview/device_preview.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,21 +15,25 @@ Future<void> main(List<String> arguments) async {
     await initializeReviewWork();
   }
 
+  const previewRequested = bool.fromEnvironment('DEVICE_PREVIEW');
   runApp(
-    ProviderScope(
-      overrides: [
-        themeModeProvider.overrideWith(
-          (ref) =>
-              ThemeModeNotifier(initialMode: startupTheme.mode, load: false),
-        ),
-        themePaletteProvider.overrideWith(
-          (ref) => ThemePaletteNotifier(
-            initialPalette: startupTheme.palette,
-            load: false,
+    DevicePreview(
+      enabled: !kReleaseMode && previewRequested,
+      builder: (_) => ProviderScope(
+        overrides: [
+          themeModeProvider.overrideWith(
+            (ref) =>
+                ThemeModeNotifier(initialMode: startupTheme.mode, load: false),
           ),
-        ),
-      ],
-      child: WordBucketApp(bucketifyMode: bucketifyMode),
+          themePaletteProvider.overrideWith(
+            (ref) => ThemePaletteNotifier(
+              initialPalette: startupTheme.palette,
+              load: false,
+            ),
+          ),
+        ],
+        child: WordBucketApp(bucketifyMode: bucketifyMode),
+      ),
     ),
   );
 }

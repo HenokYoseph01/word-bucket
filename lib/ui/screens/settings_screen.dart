@@ -9,6 +9,7 @@ import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/word_provider.dart';
+import '../widgets/responsive_segmented_control.dart';
 import 'palette_gallery_screen.dart';
 import 'walkthrough_screen.dart';
 import 'whats_new_screen.dart';
@@ -320,29 +321,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 padding: const EdgeInsets.all(14),
                 child: SizedBox(
                   width: double.infinity,
-                  child: SegmentedButton<ThemeMode>(
+                  child: ResponsiveSegmentedControl<ThemeMode>(
                     segments: const [
-                      ButtonSegment(
+                      ResponsiveSegment(
                         value: ThemeMode.system,
-                        icon: Icon(Icons.brightness_auto_rounded),
-                        label: Text('System'),
+                        icon: Icons.brightness_auto_rounded,
+                        label: 'System',
                       ),
-                      ButtonSegment(
+                      ResponsiveSegment(
                         value: ThemeMode.light,
-                        icon: Icon(Icons.light_mode_outlined),
-                        label: Text('Light'),
+                        icon: Icons.light_mode_outlined,
+                        label: 'Light',
                       ),
-                      ButtonSegment(
+                      ResponsiveSegment(
                         value: ThemeMode.dark,
-                        icon: Icon(Icons.dark_mode_outlined),
-                        label: Text('Dark'),
+                        icon: Icons.dark_mode_outlined,
+                        label: 'Dark',
                       ),
                     ],
-                    selected: {themeMode},
-                    onSelectionChanged: (selection) {
-                      ref
-                          .read(themeModeProvider.notifier)
-                          .setMode(selection.first);
+                    selected: themeMode,
+                    onChanged: (mode) {
+                      ref.read(themeModeProvider.notifier).setMode(mode);
                     },
                   ),
                 ),
@@ -604,7 +603,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             icon: Icons.bubble_chart_rounded,
             title: 'Start reading',
             description:
-                'Show a draggable bubble. Copy a word and tap the bubble to define it.',
+                'Show a draggable bubble. Tap to define a copied word, or hold it to open WordBucket.',
             value: _companionActive,
             enabled: !_companionUpdating,
             onChanged: _setReadingCompanion,
@@ -622,7 +621,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             leading: Icon(Icons.open_with_rounded),
             title: Text('Move it or dismiss it'),
             subtitle: Text(
-              'Drag it to either edge, or drag it onto the remove target at the bottom to stop.',
+              'Drag it to either edge, hold it to open WordBucket, or drag it onto the bottom target to stop.',
             ),
           ),
         ],

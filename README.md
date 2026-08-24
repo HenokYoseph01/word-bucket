@@ -155,6 +155,24 @@ flutter run -d <device-id>
 
 You can use hot reload while the debug session is running by pressing `r` in the terminal. Native Android changes—such as widget, manifest, icon, or Quick Settings changes—require a full stop and rebuild rather than hot reload.
 
+### Preview different screen sizes
+
+WordBucket includes an opt-in Device Preview workspace for checking compact,
+large, notched, and accessibility-scaled layouts without changing production
+behavior. Run it on an Android emulator:
+
+```bash
+flutter emulators
+flutter emulators --launch <emulator-id>
+flutter run -d <device-id> --dart-define=DEVICE_PREVIEW=true
+```
+
+Use Device Preview's device and accessibility controls to switch screen size,
+orientation, text scale, and safe areas. Omit the `--dart-define` flag for a
+normal development run. Device Preview is always disabled in release builds,
+and physical-device testing remains necessary for Android overlays, widgets,
+notifications, and system text-selection actions.
+
 ## Testing
 
 Run static analysis and the automated Flutter tests before creating a release:

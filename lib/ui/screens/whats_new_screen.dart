@@ -87,7 +87,7 @@ class WhatsNewScreen extends StatelessWidget {
                     icon: Icons.bubble_chart_rounded,
                     title: 'Reading Companion',
                     description:
-                        'Keep a small floating book over what you are reading. Copy a word and tap it to Bucketify without returning to the app.',
+                        'Keep a floating book over what you are reading. Tap it to Bucketify a copied word, or hold it to open WordBucket.',
                     path: 'Settings → Reading Companion → Start reading',
                   ),
                   const _NewFeatureCard(

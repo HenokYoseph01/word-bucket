@@ -30,7 +30,7 @@ class _WalkthroughScreenState extends State<WalkthroughScreen> {
       description:
           'In Settings, start Reading Companion and allow its floating book. Copy a word while reading, then tap the book to define it.',
       note:
-          'Drag it to either edge, or onto the bottom remove target to stop. WordBucket reads the clipboard only when you tap.',
+          'Hold the book to open WordBucket. Drag it to either edge, or onto the bottom remove target to stop. The clipboard is read only when you tap.',
     ),
     _WalkthroughPage(
       icon: Icons.dashboard_customize_rounded,

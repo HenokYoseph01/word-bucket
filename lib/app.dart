@@ -1,3 +1,4 @@
+import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -193,6 +194,8 @@ class _WordBucketAppState extends ConsumerState<WordBucketApp> {
       theme: buildWordBucketTheme(palette: palette),
       darkTheme: buildWordBucketDarkTheme(palette: palette),
       themeMode: themeMode,
+      locale: DevicePreview.locale(context),
+      builder: DevicePreview.appBuilder,
       color: Colors.transparent,
       home: widget.bucketifyMode
           ? const ColoredBox(color: Colors.transparent)

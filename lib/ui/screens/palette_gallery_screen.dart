@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../providers/theme_provider.dart';
+import '../widgets/responsive_segmented_control.dart';
 
 enum _PaletteFilter { all, originals, robiPack }
 
@@ -130,25 +131,23 @@ class _PaletteGalleryScreenState extends ConsumerState<PaletteGalleryScreen> {
                 padding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
                 child: SizedBox(
                   width: double.infinity,
-                  child: SegmentedButton<_PaletteFilter>(
-                    showSelectedIcon: false,
+                  child: ResponsiveSegmentedControl<_PaletteFilter>(
                     segments: const [
-                      ButtonSegment(
+                      ResponsiveSegment(
                         value: _PaletteFilter.all,
-                        label: Text('All'),
+                        label: 'All',
                       ),
-                      ButtonSegment(
+                      ResponsiveSegment(
                         value: _PaletteFilter.originals,
-                        label: Text('Originals'),
+                        label: 'Originals',
                       ),
-                      ButtonSegment(
+                      ResponsiveSegment(
                         value: _PaletteFilter.robiPack,
-                        label: Text('Robi Pack'),
+                        label: 'Robi Pack',
                       ),
                     ],
-                    selected: {_filter},
-                    onSelectionChanged: (selection) =>
-                        _setFilter(selection.first),
+                    selected: _filter,
+                    onChanged: _setFilter,
                   ),
                 ),
               ),

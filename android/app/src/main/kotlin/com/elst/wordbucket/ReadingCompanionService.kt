@@ -10,11 +10,15 @@ import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.provider.Settings
 import android.view.Gravity
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.WindowManager
 import android.widget.ImageView
 import androidx.core.app.NotificationCompat
@@ -26,6 +30,7 @@ class ReadingCompanionService : Service() {
     private var removeTarget: ImageView? = null
     private var bubbleParams: WindowManager.LayoutParams? = null
     private var draggingToRemove = false
+    private val touchHandler = Handler(Looper.getMainLooper())
 
     override fun onCreate() {
         super.onCreate()
@@ -59,6 +64,7 @@ class ReadingCompanionService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
+        touchHandler.removeCallbacksAndMessages(null)
         bubble?.let { runCatching { windowManager.removeView(it) } }
         removeTarget?.let { runCatching { windowManager.removeView(it) } }
         bubble = null
@@ -102,6 +108,13 @@ class ReadingCompanionService : Service() {
         private var touchX = 0f
         private var touchY = 0f
         private var moved = false
+        private var longPressed = false
+        private var pendingLongPress: Runnable? = null
+
+        private fun cancelLongPress() {
+            pendingLongPress?.let(touchHandler::removeCallbacks)
+            pendingLongPress = null
+        }
 
         override fun onTouch(view: View, event: MotionEvent): Boolean {
             val params = bubbleParams ?: return false
@@ -112,6 +125,19 @@ class ReadingCompanionService : Service() {
                     touchX = event.rawX
                     touchY = event.rawY
                     moved = false
+                    longPressed = false
+                    pendingLongPress = Runnable {
+                        if (!moved) {
+                            longPressed = true
+                            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                            openWordBucket()
+                        }
+                    }.also {
+                        touchHandler.postDelayed(
+                            it,
+                            ViewConfiguration.getLongPressTimeout().toLong(),
+                        )
+                    }
                     return true
                 }
                 MotionEvent.ACTION_MOVE -> {
@@ -119,6 +145,7 @@ class ReadingCompanionService : Service() {
                     val dy = (event.rawY - touchY).toInt()
                     if (!moved && hypot(dx.toDouble(), dy.toDouble()) > dp(6)) {
                         moved = true
+                        cancelLongPress()
                         showRemoveTarget()
                     }
                     params.x = startX + dx
@@ -128,7 +155,10 @@ class ReadingCompanionService : Service() {
                     return true
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    if (!moved && event.actionMasked == MotionEvent.ACTION_UP) {
+                    cancelLongPress()
+                    if (longPressed) {
+                        hideRemoveTarget()
+                    } else if (!moved && event.actionMasked == MotionEvent.ACTION_UP) {
                         openClipboardBucketify()
                     } else if (draggingToRemove) {
                         hideRemoveTarget()
@@ -148,6 +178,18 @@ class ReadingCompanionService : Service() {
         startActivity(Intent(this, BucketifyActivity::class.java).apply {
             action = BucketifyActivity.ACTION_BUCKETIFY_CLIPBOARD
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        })
+    }
+
+    private fun openWordBucket() {
+        startActivity(Intent(this, MainActivity::class.java).apply {
+            action = Intent.ACTION_MAIN
+            addCategory(Intent.CATEGORY_LAUNCHER)
+            addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP,
+            )
         })
     }
 
