@@ -44,7 +44,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.matchaHoney => const Color(0xFF9CA764),
     AppPalette.lilacEvening => const Color(0xFF4D3E6B),
     AppPalette.cherryInk => const Color(0xFF68152C),
-    AppPalette.hotPink => const Color(0xFFD81B60),
+    AppPalette.hotPink => const Color(0xFFE60073),
     AppPalette.pressedFlowers => const Color(0xFF473469),
     AppPalette.moonlitLagoon => const Color(0xFF294380),
   };
@@ -60,7 +60,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.matchaHoney => const Color(0xFFF1E8C7),
     AppPalette.lilacEvening => const Color(0xFF8DAEC3),
     AppPalette.cherryInk => const Color(0xFFB65D70),
-    AppPalette.hotPink => const Color(0xFFFF79B0),
+    AppPalette.hotPink => const Color(0xFFFF4FA3),
     AppPalette.pressedFlowers => const Color(0xFFF79EB1),
     AppPalette.moonlitLagoon => const Color(0xFF69D2CD),
   };
@@ -92,7 +92,7 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.matchaHoney => const Color(0xFF1B1D13),
     AppPalette.lilacEvening => const Color(0xFF222433),
     AppPalette.cherryInk => const Color(0xFF180C11),
-    AppPalette.hotPink => const Color(0xFF190A12),
+    AppPalette.hotPink => const Color(0xFF080308),
     AppPalette.pressedFlowers => const Color(0xFF2A171D),
     AppPalette.moonlitLagoon => const Color(0xFF071F28),
   };
@@ -155,9 +155,9 @@ extension AppPaletteDetails on AppPalette {
     AppPalette.hotPink => const [
       Color(0xFFFFF7FB),
       Color(0xFFFFD3E4),
-      Color(0xFFFF79B0),
-      Color(0xFFD81B60),
-      Color(0xFF4A102A),
+      Color(0xFFFF4FA3),
+      Color(0xFFE60073),
+      Color(0xFF080308),
     ],
     AppPalette.pressedFlowers => const [
       Color(0xFFF2E7D2),
@@ -259,20 +259,20 @@ ThemeData _buildTheme(Brightness brightness, AppPalette palette) {
   }
   if (palette == AppPalette.hotPink) {
     scheme = scheme.copyWith(
-      primary: dark ? const Color(0xFFFF73AA) : const Color(0xFFC2185B),
-      onPrimary: dark ? const Color(0xFF4A0824) : Colors.white,
+      primary: dark ? const Color(0xFFFF4FA3) : const Color(0xFFE00070),
+      onPrimary: dark ? const Color(0xFF3B001D) : Colors.white,
       primaryContainer: dark
-          ? const Color(0xFF5F1737)
+          ? const Color(0xFF58002D)
           : const Color(0xFFFFD7E6),
       onPrimaryContainer: dark
           ? const Color(0xFFFFD9E7)
           : const Color(0xFF65002A),
-      secondary: dark ? const Color(0xFFE2A9BC) : const Color(0xFF805461),
+      secondary: dark ? const Color(0xFFE7A7C0) : const Color(0xFF805461),
       onSecondary: dark ? const Color(0xFF3A1B25) : Colors.white,
-      tertiary: dark ? const Color(0xFFFF9CC3) : const Color(0xFFE83E7F),
+      tertiary: dark ? const Color(0xFFFF85BC) : const Color(0xFFFF1686),
       onTertiary: dark ? const Color(0xFF4D1028) : Colors.white,
       tertiaryContainer: dark
-          ? const Color(0xFF51283A)
+          ? const Color(0xFF441125)
           : const Color(0xFFFFD3E4),
       onTertiaryContainer: dark
           ? const Color(0xFFFFD9E7)
